@@ -32,6 +32,7 @@ import Welcome from "./Component/Register/Welcome";
 import AdditionalInfo from "./Component/Register/AdditionalInfo";
 import Management from "./Component/Pages/Managements/Management";
 import Referral from "./Component/Pages/Referral/Referral";
+import PhysiotherapistOnboarding from "./Component/PhysiotherapistOnboarding";
 
 function App() {
   const dispatch = useDispatch();
@@ -129,46 +130,47 @@ function App() {
   //   };
   // }, [dispatch]);
 
-
   useEffect(() => {
-  const userId = localStorage.getItem("userId");
-  console.log("🆔 Frontend userId from localStorage:", userId);
+    const userId = localStorage.getItem("userId");
+    console.log("🆔 Frontend userId from localStorage:", userId);
 
-  const handleConnect = () => {
-    console.log("✅ Connected to socket:", socket.id);
+    const handleConnect = () => {
+      console.log("✅ Connected to socket:", socket.id);
+      if (userId) {
+        console.log("🚀 Emitting join event with userId:", userId);
+        socket.emit("join", userId);
+      }
+    };
+
+    const handleNotification = (data) => {
+      console.log("📩 Notification received:", data);
+      dispatch(addNotification(data));
+
+      // Add this part to handle appointment notifications
+      if (data.type === "appointment") {
+        // Dispatch a custom event that your Appointment component can listen to
+        window.dispatchEvent(
+          new CustomEvent("newAppointment", {
+            detail: data,
+          })
+        );
+
+        // Or alternatively, you could use a ref to call a function
+        // if you have direct access to the Appointment component
+      }
+    };
+
+    socket.on("connect", handleConnect);
+
     if (userId) {
-      console.log("🚀 Emitting join event with userId:", userId);
-      socket.emit("join", userId);
+      socket.on("notification", handleNotification);
     }
-  };
 
-  const handleNotification = (data) => {
-    console.log("📩 Notification received:", data);
-    dispatch(addNotification(data));
-    
-    // Add this part to handle appointment notifications
-    if (data.type === "appointment") {
-      // Dispatch a custom event that your Appointment component can listen to
-      window.dispatchEvent(new CustomEvent('newAppointment', { 
-        detail: data 
-      }));
-      
-      // Or alternatively, you could use a ref to call a function
-      // if you have direct access to the Appointment component
-    }
-  };
-
-  socket.on("connect", handleConnect);
-
-  if (userId) {
-    socket.on("notification", handleNotification);
-  }
-
-  return () => {
-    socket.off("connect", handleConnect);
-    socket.off("notification", handleNotification);
-  };
-}, [dispatch]);
+    return () => {
+      socket.off("connect", handleConnect);
+      socket.off("notification", handleNotification);
+    };
+  }, [dispatch]);
 
   return (
     <BrowserRouter>
@@ -180,19 +182,23 @@ function App() {
         <Route path="/welcome" element={<Welcome />} />
         <Route path="/additional-info" element={<AdditionalInfo />} />
         <Route path="/dashboard" element={<Home />} />
+        <Route path="/test" element={<PhysiotherapistOnboarding />} />
 
         <Route path="/patients" element={<Patients />} />
         <Route path="/appointments" element={<Appointment />} />
         <Route path="/assesments" element={<ClinicalAssessments />} />
         <Route path="/management" element={<Management />} />
         <Route path="/terms" element={<Terms />} />
-        <Route path="/referral" element={<Referral/>} />
+        <Route path="/referral" element={<Referral />} />
 
         <Route path="/therapy" element={<TherapyServices />}>
           <Route path="addtherapy" element={<AddServices />} />
           <Route path="alltherapy" element={<GetAllService />} />
           <Route path="details/:serviceId" element={<ServiceDetailPage />} />
-          <Route path="add-more-details/:imageId" element={<AddMoreDetails />}/>
+          <Route
+            path="add-more-details/:imageId"
+            element={<AddMoreDetails />}
+          />
         </Route>
         <Route path="/treatments" element={<Treatments />} />
         {/* <Route path="/progress-reports" element={<ProgressReport />} /> */}
@@ -206,13 +212,10 @@ function App() {
 
         <Route path="/question" element={<Question />} />
 
-        
-              <Route path="/refund" element={<Refund/>} >
-
-          <Route path="reqrefund" element={<ReqRefund/>} />
-          <Route path="allrefund" element={<AllRefund/>} />
-          
-          </Route>
+        <Route path="/refund" element={<Refund />}>
+          <Route path="reqrefund" element={<ReqRefund />} />
+          <Route path="allrefund" element={<AllRefund />} />
+        </Route>
         {/* <Route path="/refund" element={<Refund/>} /> */}
         <Route path="/contact" element={<Bharti />} />
       </Routes>

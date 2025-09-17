@@ -49,19 +49,21 @@ const Sidebar = ({ activePage }) => {
       navigate("/login");
     }, 1000);
   };
+  
 
   const modules = [
-    { icon: "FaTachometerAlt", text: "Dashboard", path: "/" },
+    { icon: "FaTachometerAlt", text: "My Dashboard", path: "/" },
     { icon: "FaUserInjured", text: "Patients", path: "/patients" },
-    {
-      icon: "FaBrain",
-      text: "Therapy Services",
-      dropdown: true,
-      subRoutes: [
-        { text: "Add Services", path: "/therapy/addtherapy" },
-        { text: "All Services", path: "/therapy/alltherapy" },
-      ],
-    },
+    { icon: "FaBrain", text: "Therapy Services", path: "/therapy/alltherapy" },
+    // {
+    //   icon: "FaBrain",
+    //   text: "Therapy Services",
+    //   dropdown: true,
+    //   subRoutes: [
+    //     { text: "Add Services", path: "/therapy/addtherapy" },
+    //     { text: "All Services", path: "/therapy/alltherapy" },
+    //   ],
+    // },
 
     { icon: "FaCalendarCheck", text: "Appointments", path: "/appointments" },
     // { icon: "FaStethoscope", text: "Clinical Assessments", path: "/treatments", },

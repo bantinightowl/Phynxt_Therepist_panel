@@ -33,8 +33,7 @@ const ReqRefund = () => {
   const [showChecklistModal, setShowChecklistModal] = useState(false);
   const [loadingAppointmentId, setLoadingAppointmentId] = useState(null);
 
-
-  console.log(allApointment, "all apointment")
+  console.log(allApointment, "all apointment");
 
   const fetchAppointmentData = async () => {
     const token = Cookies.get("accessToken");
@@ -107,7 +106,6 @@ const ReqRefund = () => {
     }
   };
 
-
   const searchService = async (query) => {
     const token = Cookies.get("accessToken");
     if (!token) return;
@@ -153,8 +151,6 @@ const ReqRefund = () => {
   }, [searchQuery]);
 
   const appointmentsPerPage = 8;
-
-
 
   const toggleDropdown = (id) => {
     setOpenDropdownId(openDropdownId === id ? null : id);
@@ -205,52 +201,50 @@ const ReqRefund = () => {
   };
 
   const handleRequestCoupon = async (appointmentId) => {
-  const token = Cookies.get("accessToken");
-  if (!token) {
-    toast.error("You are not logged in. Please log in.", {
-      position: "top-right",
-    });
-    navigate("/login");
-    return;
-  }
-  setBtnLoading(true);
-  setLoadingAppointmentId(appointmentId);
-  try {
-    const res = await fetch(
-      `https://physiotherapy-1.onrender.com/apis/requestCoupon/requestCoupon`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ appointmentId }),
-      }
-    );
-    const result = await res.json();
-
-    if (result.success) {
-      toast.success("Your Coupon Request added successfully!", {
+    const token = Cookies.get("accessToken");
+    if (!token) {
+      toast.error("You are not logged in. Please log in.", {
         position: "top-right",
       });
-
-      // ✅ Remove the refunded appointment from the table
-      setAllAppointment((prev) =>
-        prev.filter((appo) => appo._id !== appointmentId)
-      );
-    } else {
-      toast.error(result.message || "Something went wrong.");
+      navigate("/login");
+      return;
     }
-  } catch (error) {
-    console.error("coupon request", error);
-    toast.error(error.message || "Something went wrong. Please try again.");
-  } finally {
-    setBtnLoading(false);
-    setLoadingAppointmentId(null);
-  }
-};
+    setBtnLoading(true);
+    setLoadingAppointmentId(appointmentId);
+    try {
+      const res = await fetch(
+        `https://physiotherapy-1.onrender.com/apis/requestCoupon/requestCoupon`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ appointmentId }),
+        }
+      );
+      const result = await res.json();
 
+      if (result.success) {
+        toast.success("Your Coupon Request added successfully!", {
+          position: "top-right",
+        });
 
+        // ✅ Remove the refunded appointment from the table
+        setAllAppointment((prev) =>
+          prev.filter((appo) => appo._id !== appointmentId)
+        );
+      } else {
+        toast.error(result.message || "Something went wrong.");
+      }
+    } catch (error) {
+      console.error("coupon request", error);
+      toast.error(error.message || "Something went wrong. Please try again.");
+    } finally {
+      setBtnLoading(false);
+      setLoadingAppointmentId(null);
+    }
+  };
 
   // const handleRequestCoupon = async (appointmentId) => {
   //   const token = Cookies.get("accessToken");
@@ -295,151 +289,142 @@ const ReqRefund = () => {
   // };
 
   return (
-
     <div>
-
-   
-    <div className="flex h-screen overflow-x-hidden">
-      
-
-      <div className="flex-1 flex flex-col overflow-hidden">
-      
-        <main className="flex-1 p-4 bg-gray-100 overflow-y-auto overflow-x-hidden">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4">
-            <h1 className="text-xl sm:text-2xl font-semibold ">Refunds</h1>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4"></div>
-          </div>
-          <div className="overflow-x-auto bg-white shadow-md rounded-lg">
-            <table className="min-w-full table-auto">
-              <thead className="bg-[#1E2A3A] text-white">
-                <tr>
-                  <th className="px-4 py-2">Serial No</th>
-                  <th className="px-4 py-2">Patient Name</th>
-                  <th className="px-4 py-2">Patient Details</th>
-                  <th className="px-4 py-2">Service Details</th>
-                  <th className="px-4 py-2">Booking Date</th>
-                  {showAppointmentInfo && (
-                    <>
-                      <th className="px-4 py-2">Appointment Date</th>
-                      <th className="px-4 py-2">Approved Time</th>
-                    </>
-                  )}
-
-                  
-                  {/* <th className="px-4 py-2"> Service Location</th> */}
-                  <th className="px-4 py-2">Session Fee</th>
-                  <th className="px-4 py-2">Action</th>
-                </tr>
-              </thead>
-              <tbody className="text-gray-700 text-sm sm:text-base">
-                {loader ? (
+      <div className="flex h-screen overflow-x-hidden">
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <main className="flex-1 p-4 bg-gray-100 overflow-y-auto overflow-x-hidden animate-fadeIn">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4">
+              <h1 className="text-xl sm:text-2xl font-semibold ">Refunds</h1>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4"></div>
+            </div>
+            <div className="overflow-x-auto bg-white shadow-md rounded-lg">
+              <table className="min-w-full table-auto">
+                <thead className="bg-[#1E2A3A] text-white">
                   <tr>
-                    <td colSpan={11} className="py-6 text-center">
-                      <div className="flex justify-center items-center">
-                        <TailSpin
-                          visible={true}
-                          height="80"
-                          width="80"
-                          color="#4fa94d"
-                          ariaLabel="tail-spin-loading"
-                        />
-                      </div>
-                    </td>
-                  </tr>
-                ) : allApointment.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={5}
-                      className="text-center text-2xl font-medium"
-                    >
-                      No Data Found
-                    </td>
-                  </tr>
-                ) : (
-                  [...allApointment].reverse().map((appo, index) => (
-                    <tr key={appo._id}>
-                      <td className="border border-gray-300 px-4 py-2 text-sm max-w-[200px] whitespace-normal break-words">
-                        {index + 1}
-                      </td>
+                    <th className="px-4 py-2">Serial No</th>
+                    <th className="px-4 py-2">Patient Name</th>
+                    <th className="px-4 py-2">Patient Details</th>
+                    <th className="px-4 py-2">Service Details</th>
+                    <th className="px-4 py-2">Booking Date</th>
+                    {showAppointmentInfo && (
+                      <>
+                        <th className="px-4 py-2">Appointment Date</th>
+                        <th className="px-4 py-2">Approved Time</th>
+                      </>
+                    )}
 
-                      <td className="border border-gray-300 px-4 py-2 text-sm max-w-[200px] whitespace-normal break-words">
-                        {appo?.fullName}
+                    {/* <th className="px-4 py-2"> Service Location</th> */}
+                    <th className="px-4 py-2">Session Fee</th>
+                    <th className="px-4 py-2">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="text-gray-700 text-sm sm:text-base">
+                  {loader ? (
+                    <tr>
+                      <td colSpan={11} className="py-6 text-center">
+                        <div className="flex justify-center items-center">
+                          <TailSpin
+                            visible={true}
+                            height="80"
+                            width="80"
+                            color="#4fa94d"
+                            ariaLabel="tail-spin-loading"
+                          />
+                        </div>
                       </td>
+                    </tr>
+                  ) : allApointment.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={5}
+                        className="text-center text-2xl font-medium"
+                      >
+                        No Data Found
+                      </td>
+                    </tr>
+                  ) : (
+                    [...allApointment].reverse().map((appo, index) => (
+                      <tr key={appo._id}>
+                        <td className="border border-gray-300 px-4 py-2 text-sm max-w-[200px] whitespace-normal break-words">
+                          {index + 1}
+                        </td>
 
-                      {appo.status === "approved" ? (
+                        <td className="border border-gray-300 px-4 py-2 text-sm max-w-[200px] whitespace-normal break-words">
+                          {appo?.fullName}
+                        </td>
+
+                        {appo.status === "approved" ? (
+                          <td className="border border-gray-300 px-4 py-2 text-sm max-w-[200px] whitespace-normal break-words">
+                            <button
+                              className="text-blue-600 underline"
+                              onClick={() => {
+                                setModalType("patient Details");
+                                setModalContent(appo);
+                              }}
+                            >
+                              View{" "}
+                            </button>
+                          </td>
+                        ) : (
+                          <td className="border border-gray-300 px-4 py-2 text-sm max-w-[200px] whitespace-normal break-words">
+                            <button
+                              className="text-blue-600 underline"
+                              onClick={() => {
+                                setModalType("Want Details ?");
+                                setModalContent(appo);
+                              }}
+                            >
+                              View{" "}
+                            </button>
+                          </td>
+                        )}
+
                         <td className="border border-gray-300 px-4 py-2 text-sm max-w-[200px] whitespace-normal break-words">
                           <button
                             className="text-blue-600 underline"
                             onClick={() => {
-                              setModalType("patient Details");
-                              setModalContent(appo);
+                              setModalType("Service Details");
+                              setModalContent(
+                                appo?.therapyServiceId?.serviceId
+                              );
                             }}
                           >
                             View{" "}
                           </button>
                         </td>
-                      ) : (
-                        <td className="border border-gray-300 px-4 py-2 text-sm max-w-[200px] whitespace-normal break-words">
-                          <button
-                            className="text-blue-600 underline"
-                            onClick={() => {
-                              setModalType("Want Details ?");
-                              setModalContent(appo);
-                            }}
-                          >
-                            View{" "}
-                          </button>
+
+                        <td className="border border-gray-300 px-4 py-2 text-sm max-w-[200px]  break-words whitespace-nowrap">
+                          {new Date(appo?.date).toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })}
                         </td>
-                      )}
 
-                      <td className="border border-gray-300 px-4 py-2 text-sm max-w-[200px] whitespace-normal break-words">
-                        <button
-                          className="text-blue-600 underline"
-                          onClick={() => {
-                            setModalType("Service Details");
-                            setModalContent(appo?.therapyServiceId?.serviceId);
-                          }}
-                        >
-                          View{" "}
-                        </button>
-                      </td>
-
-                      <td className="border border-gray-300 px-4 py-2 text-sm max-w-[200px]  break-words whitespace-nowrap">
-                        {new Date(appo?.date).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        })}
-                      </td>
-                      
-
-                      {showAppointmentInfo && (
-                        <>
-                          <td className="border border-gray-300 px-4 py-2">
-                            {appo?.approvedDate
-                              ? new Date(appo.approvedDate).toLocaleDateString(
-                                  "en-US",
-                                  {
+                        {showAppointmentInfo && (
+                          <>
+                            <td className="border border-gray-300 px-4 py-2">
+                              {appo?.approvedDate
+                                ? new Date(
+                                    appo.approvedDate
+                                  ).toLocaleDateString("en-US", {
                                     year: "numeric",
                                     month: "long",
                                     day: "numeric",
-                                  }
-                                )
-                              : "-"}
-                          </td>
-                          <td className="border border-gray-300 px-4 py-2">
-                            {appo?.approvedTime || "-"}
-                          </td>
-                        </>
-                      )}
+                                  })
+                                : "-"}
+                            </td>
+                            <td className="border border-gray-300 px-4 py-2">
+                              {appo?.approvedTime || "-"}
+                            </td>
+                          </>
+                        )}
 
-                      
-
-                      {/* <td className="border border-gray-300 px-4 py-2 text-sm max-w-[200px] whitespace-normal break-words">
+                        {/* <td className="border border-gray-300 px-4 py-2 text-sm max-w-[200px] whitespace-normal break-words">
                         {appo?.therapyServiceId?.city}
                       </td> */}
 
-                      {/* <td className="border border-gray-300 px-4 py-2 text-sm max-w-[200px] whitespace-normal break-words">
+                        {/* <td className="border border-gray-300 px-4 py-2 text-sm max-w-[200px] whitespace-normal break-words">
                           <button
                             className="text-blue-600 underline"
                             onClick={() => {
@@ -453,95 +438,94 @@ const ReqRefund = () => {
                           </button>
                         </td> */}
 
+                        <td className="border border-gray-300 px-4 py-2 text-sm max-w-[200px] whitespace-normal break-words">
+                          {appo?.therapyServiceId?.price}
+                        </td>
 
-                      <td className="border border-gray-300 px-4 py-2 text-sm max-w-[200px] whitespace-normal break-words">
-                        {appo?.therapyServiceId?.price}
-                      </td>
-
-                      <td className="border border-gray-300 px-4 py-2 text-sm max-w-[200px] whitespace-normal break-words">
-                        {appo.couponRequest ? (
-                          <button
-                            disabled
-                            className="bg-gray-400 text-white text-sm px-2 py-1 rounded font-medium cursor-not-allowed"
-                          >
-                            Req Coupon
-                          </button>
-                        ) : (
-                          <button
-                            onClick={() => handleRequestCoupon(appo?._id)}
-                            className={`bg-blue-950 text-white text-sm px-2 py-1 rounded font-medium whitespace-nowrap text-center`}
-                          >
-                            {loadingAppointmentId === appo._id ? (
-                              <ThreeDots
-                                visible={true}
-                                height="20"
-                                width="40"
-                                color="#fff"
-                                radius="9"
-                                ariaLabel="three-dots-loading"
-                              />
-                            ) : (
-                              "Req Coupon"
-                            )}
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-            {/* <Pagination
+                        <td className="border border-gray-300 px-4 py-2 text-sm max-w-[200px] whitespace-normal break-words">
+                          {appo.couponRequest ? (
+                            <button
+                              disabled
+                              className="bg-gray-400 text-white text-sm px-2 py-1 rounded font-medium cursor-not-allowed"
+                            >
+                              Req Coupon
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleRequestCoupon(appo?._id)}
+                              className={`bg-blue-950 text-white text-sm px-2 py-1 rounded font-medium whitespace-nowrap text-center`}
+                            >
+                              {loadingAppointmentId === appo._id ? (
+                                <ThreeDots
+                                  visible={true}
+                                  height="20"
+                                  width="40"
+                                  color="#fff"
+                                  radius="9"
+                                  ariaLabel="three-dots-loading"
+                                />
+                              ) : (
+                                "Req Coupon"
+                              )}
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+              {/* <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
               onPageChange={setCurrentPage}
             /> */}
-          </div>
-        </main>
-      </div>
-
-      {modalContent && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-4 sm:p-6 rounded-lg w-[90%] max-w-md sm:max-w-lg md:max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h1 className="text-2xl font-semibold ">{modalType}</h1>
-
-              <button
-                className="ml-auto  text-red-600 font-semibold text-3xl"
-                onClick={() => {
-                  setModalContent(null);
-                  setModalType(null);
-                }}
-              >
-                <RxCross2 />
-              </button>
             </div>
-            {modalType === "Want Details ?" && (
-              <div>
-                <p>Wants to See Details Just Approved Appoiment</p>
-              </div>
-            )}
+          </main>
+        </div>
 
-            {modalType === "patient Details" && (
-              <div>
-                <p>
-                  <strong>Name:</strong> {modalContent.fullName}
-                </p>
-                <p>
-                  <strong>Email:</strong> {modalContent?.email}
-                </p>
-                <p>
-                  <strong>Phone:</strong> {modalContent?.phoneNumber}
-                </p>
-                <p>
-                  <strong>Gender:</strong> {modalContent?.gender}
-                </p>
+        {modalContent && (
+          <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+            <div className="bg-white p-4 sm:p-6 rounded-lg w-[90%] max-w-md sm:max-w-lg md:max-w-2xl max-h-[90vh] overflow-y-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h1 className="text-2xl font-semibold ">{modalType}</h1>
+
+                <button
+                  className="ml-auto  text-red-600 font-semibold text-3xl"
+                  onClick={() => {
+                    setModalContent(null);
+                    setModalType(null);
+                  }}
+                >
+                  <RxCross2 />
+                </button>
+              </div>
+              {modalType === "Want Details ?" && (
+                <div>
+                  <p>Wants to See Details Just Approved Appoiment</p>
+                </div>
+              )}
+
+              {modalType === "patient Details" && (
+                <div>
+                  <p>
+                    <strong>Name:</strong> {modalContent.fullName}
+                  </p>
+                  <p>
+                    <strong>Email:</strong> {modalContent?.email}
+                  </p>
+                  <p>
+                    <strong>Phone:</strong> {modalContent?.phoneNumber}
+                  </p>
+                  <p>
+                    <strong>Gender:</strong> {modalContent?.gender}
+                  </p>
 
                   <p>
-                  <strong>Age:</strong> {calculateAge(modalContent?.dob)} years
-                  old
-                </p>
-                {/* <p>
+                    <strong>Age:</strong> {calculateAge(modalContent?.dob)}{" "}
+                    years old
+                  </p>
+                  {/* <p>
                   <strong>Date of Birthday:</strong>{" "}
                   {new Date(modalContent?.dob).toLocaleDateString("en-GB", {
                     day: "2-digit",
@@ -549,51 +533,51 @@ const ReqRefund = () => {
                     year: "numeric",
                   })}
                 </p> */}
-                <p>
-                  <strong>Description:</strong> {modalContent?.description}
-                </p>
-              </div>
-            )}
+                  <p>
+                    <strong>Description:</strong> {modalContent?.description}
+                  </p>
+                </div>
+              )}
 
-            {modalType === "Service Details" && (
-              <div>
-                <p>
-                  <strong> Service Name:</strong> {modalContent?.serviceName}
-                </p>
-                <p>
-                  <strong>Title:</strong> {modalContent?.title}
-                </p>
-                <p>
-                  <strong> Description:</strong> {modalContent?.description}
-                </p>
-              </div>
-            )}
+              {modalType === "Service Details" && (
+                <div>
+                  <p>
+                    <strong> Service Name:</strong> {modalContent?.serviceName}
+                  </p>
+                  <p>
+                    <strong>Title:</strong> {modalContent?.title}
+                  </p>
+                  <p>
+                    <strong> Description:</strong> {modalContent?.description}
+                  </p>
+                </div>
+              )}
 
-            {modalType === "Address" && (
-              <div>
-                <p>
-                  <strong>Country:</strong> {modalContent.country}
-                </p>
+              {modalType === "Address" && (
+                <div>
+                  <p>
+                    <strong>Country:</strong> {modalContent.country}
+                  </p>
 
-                <p>
-                  <strong>State:</strong> {modalContent.state}
-                </p>
-                   <p>
-                  <strong>City:</strong> {modalContent.city}
-                </p>
-                 <p>
-                  <strong>Locality:</strong> {modalContent.locality}
-                </p>
-                 <p>
-                  <strong>fullAddress:</strong> {modalContent.fullAddress}
-                </p>
-              </div>
-            )}
+                  <p>
+                    <strong>State:</strong> {modalContent.state}
+                  </p>
+                  <p>
+                    <strong>City:</strong> {modalContent.city}
+                  </p>
+                  <p>
+                    <strong>Locality:</strong> {modalContent.locality}
+                  </p>
+                  <p>
+                    <strong>fullAddress:</strong> {modalContent.fullAddress}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
-     </div>
   );
 };
 

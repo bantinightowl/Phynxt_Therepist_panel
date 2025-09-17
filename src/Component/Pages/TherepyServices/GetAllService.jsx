@@ -335,7 +335,7 @@ import { useState, useEffect } from "react";
 import { ToastContainer, toast } from "react-toastify";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
-import { IoMdClose } from "react-icons/io";
+import { IoMdAdd, IoMdClose } from "react-icons/io";
 import ServiceDetailPage from "./ServiceDetailPage";
 import { IoIosEye } from "react-icons/io";
 import { TailSpin } from "react-loader-spinner";
@@ -343,6 +343,7 @@ import { all } from "axios";
 import { FaRegEye } from "react-icons/fa";
 import { RxCross2 } from "react-icons/rx";
 import { RiEdit2Fill } from "react-icons/ri";
+import { MdAdd } from "react-icons/md";
 
 function GetAllService() {
   const [loading, setLoading] = useState(false);
@@ -497,6 +498,14 @@ function GetAllService() {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="border-b-2 pr-20"
           /> */}
+
+        <button
+          onClick={() => navigate("/therapy/addtherapy")}
+          className="flex items-center bg-[#009688] hover:bg-[#008577] text-white px-4 py-3 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 font-medium"
+        >
+          <IoMdAdd  className="mr-1 font-bold" />
+          Add Service
+        </button>
       </div>
       <div className="w-full overflow-x-auto">
         <div className="min-w-[1000px] bg-white shadow-md rounded-lg">
@@ -542,86 +551,85 @@ function GetAllService() {
                   </td>
                 </tr>
               ) : (
-               [...allService]
-  .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map((ser) => (
-                  <tr key={ser.id} className="text-center">
-                    <td className="border border-gray-300 px-4 py-2 text-sm">
-                      {ser?.therapyServiceId?.serviceId?.serviceName}
-                    </td>
-                    <td className="border border-gray-300 px-4 py-2 text-sm">
-                      {ser?.therapyServiceId?.serviceId?.features[0]}
-                    </td>
-                    <td className="border border-gray-300 px-4 py-2 text-sm">
-                      {ser?.therapyServiceId?.serviceId?.description
-                        .split(" ")
-                        .slice(0, 5)
-                        .join(" ")}
-                      ....
-                    </td>
+                [...allService]
+                  .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                  .map((ser) => (
+                    <tr key={ser.id} className="text-center">
+                      <td className="border border-gray-300 px-4 py-2 text-sm">
+                        {ser?.therapyServiceId?.serviceId?.serviceName}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-2 text-sm">
+                        {ser?.therapyServiceId?.serviceId?.features[0]}
+                      </td>
+                      <td className="border border-gray-300 px-4 py-2 text-sm">
+                        {ser?.therapyServiceId?.serviceId?.description
+                          .split(" ")
+                          .slice(0, 5)
+                          .join(" ")}
+                        ....
+                      </td>
 
-                    {/* <td className="border border-gray-300 px-4 py-2 text-sm">
+                      {/* <td className="border border-gray-300 px-4 py-2 text-sm">
                         {ser?.therapyServiceId?.city}
                       </td> */}
 
-                    <td className="border border-gray-300 px-4 py-2 text-sm max-w-[200px] whitespace-normal break-words">
-                      <button
-                        className="text-blue-600 underline"
-                        onClick={() => {
-                          setModalType("Address");
-                          setModalContent(ser?.therapyServiceId);
-                        }}
-                      >
-                        View{" "}
-                      </button>
-                    </td>
+                      <td className="border border-gray-300 px-4 py-2 text-sm max-w-[200px] whitespace-normal break-words">
+                        <button
+                          className="text-blue-600 underline"
+                          onClick={() => {
+                            setModalType("Address");
+                            setModalContent(ser?.therapyServiceId);
+                          }}
+                        >
+                          View{" "}
+                        </button>
+                      </td>
 
-                    <td className="border border-gray-300 px-4 py-2 text-sm">
-                      {ser?.therapyServiceId?.price}
-                    </td>
+                      <td className="border border-gray-300 px-4 py-2 text-sm">
+                        {ser?.therapyServiceId?.price}
+                      </td>
 
-                    <td className="border border-gray-300 px-4 py-2 text-sm max-w-[200px] whitespace-normal break-words">
-                      <button
-                        className="text-blue-600 underline "
-                        onClick={() => {
-                          setShowTimeSlot((pre) => !pre);
-                          setTimeSlotData(
-                            ser?.therapyServiceId?.availableSlots
-                          );
-                        }}
-                      >
-                        View{" "}
-                      </button>
-                    </td>
+                      <td className="border border-gray-300 px-4 py-2 text-sm max-w-[200px] whitespace-normal break-words">
+                        <button
+                          className="text-blue-600 underline "
+                          onClick={() => {
+                            setShowTimeSlot((pre) => !pre);
+                            setTimeSlotData(
+                              ser?.therapyServiceId?.availableSlots
+                            );
+                          }}
+                        >
+                          View{" "}
+                        </button>
+                      </td>
 
-                    <td className="border border-gray-300 px-4 py-2 text-sm max-w-[200px] whitespace-normal break-words">
-                      <button
-                        className="text-blue-600 underline"
-                        onClick={() => {
-                          setImageShowModel((pre) => !pre);
-                          setImageModelData(ser?.image);
-                          setCurrentImageIndex(0);
-                        }}
-                      >
-                        View{" "}
-                      </button>
-                    </td>
-                    <td className="border border-gray-300 px-4 py-2 text-sm max-w-[200px] whitespace-normal break-words">
-                      <button
-                        className="text-blue-600 underline "
-                        onClick={() => {
-                          setVideoModelData(ser?.video);
-                          setCurrentVideoIndex(0);
-                          setVideoShowModel(true);
-                        }}
-                      >
-                        View{" "}
-                      </button>
-                    </td>
+                      <td className="border border-gray-300 px-4 py-2 text-sm max-w-[200px] whitespace-normal break-words">
+                        <button
+                          className="text-blue-600 underline"
+                          onClick={() => {
+                            setImageShowModel((pre) => !pre);
+                            setImageModelData(ser?.image);
+                            setCurrentImageIndex(0);
+                          }}
+                        >
+                          View{" "}
+                        </button>
+                      </td>
+                      <td className="border border-gray-300 px-4 py-2 text-sm max-w-[200px] whitespace-normal break-words">
+                        <button
+                          className="text-blue-600 underline "
+                          onClick={() => {
+                            setVideoModelData(ser?.video);
+                            setCurrentVideoIndex(0);
+                            setVideoShowModel(true);
+                          }}
+                        >
+                          View{" "}
+                        </button>
+                      </td>
 
-                    <td className="border border-gray-300 px-4 py-2 text-sm max-w-[200px] whitespace-normal break-words">
-                     
-
-                      {/* <button
+                      <td className="border border-gray-300 px-4 py-2 text-sm max-w-[200px] whitespace-normal break-words">
+                        {/* <button
                         className="text-blue-600 underline "
                         onClick={() =>
                           handleSingalServiceVideo(ser?.imageVideoId)
@@ -630,47 +638,47 @@ function GetAllService() {
                         <RiEdit2Fill />
                       </button> */}
 
-                       <button
-                        className="text-blue-600 underline "
-                        onClick={() =>
-                          handleSingalServiceVideo(ser?.therapyServiceId?._id)
-                        }
-                      >
-                        <RiEdit2Fill />
-                      </button>
-                    </td>
+                        <button
+                          className="text-blue-600 underline "
+                          onClick={() =>
+                            handleSingalServiceVideo(ser?.therapyServiceId?._id)
+                          }
+                        >
+                          <RiEdit2Fill />
+                        </button>
+                      </td>
 
-                    <td className="border border-gray-300 px-4 py-2 text-sm max-w-[200px] whitespace-normal break-words">
-                      {/* <button onClick={()=>handleDeleteService(ser?.therapyServiceId._id)}>
+                      <td className="border border-gray-300 px-4 py-2 text-sm max-w-[200px] whitespace-normal break-words">
+                        {/* <button onClick={()=>handleDeleteService(ser?.therapyServiceId._id)}>
                   { ser?.therapyServiceId?.isDelete ?<h1 className="text-red-700 font-medium ">InActive</h1> :<h1 className=" text-blue-700 font-medium">Active</h1>}
                   </button> */}
 
-                      {ser?.therapyServiceId ? (
-                        <div className="relative inline-block w-11 h-5">
-                          <input
-                            id={`toggle-${ser.therapyServiceId._id}`}
-                            type="checkbox"
-                            checked={!ser.therapyServiceId.isDelete}
-                            onChange={() =>
-                              handleDeleteService(ser.therapyServiceId._id)
-                            }
-                            className={`peer appearance-none w-11 h-5 rounded-full cursor-pointer transition-colors duration-300 ${
-                              ser.therapyServiceId.isDelete
-                                ? "bg-red-500"
-                                : "bg-green-500"
-                            }`}
-                          />
-                          <label
-                            htmlFor={`toggle-${ser.therapyServiceId._id}`}
-                            className="absolute top-0 left-0 w-5 h-5 bg-white rounded-full border border-slate-300 shadow-sm transition-transform duration-300 peer-checked:translate-x-6 cursor-pointer"
-                          ></label>
-                        </div>
-                      ) : (
-                        <span className="text-gray-400 text-sm">No Data</span>
-                      )}
-                    </td>
-                  </tr>
-                ))
+                        {ser?.therapyServiceId ? (
+                          <div className="relative inline-block w-11 h-5">
+                            <input
+                              id={`toggle-${ser.therapyServiceId._id}`}
+                              type="checkbox"
+                              checked={!ser.therapyServiceId.isDelete}
+                              onChange={() =>
+                                handleDeleteService(ser.therapyServiceId._id)
+                              }
+                              className={`peer appearance-none w-11 h-5 rounded-full cursor-pointer transition-colors duration-300 ${
+                                ser.therapyServiceId.isDelete
+                                  ? "bg-red-500"
+                                  : "bg-green-500"
+                              }`}
+                            />
+                            <label
+                              htmlFor={`toggle-${ser.therapyServiceId._id}`}
+                              className="absolute top-0 left-0 w-5 h-5 bg-white rounded-full border border-slate-300 shadow-sm transition-transform duration-300 peer-checked:translate-x-6 cursor-pointer"
+                            ></label>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 text-sm">No Data</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))
               )}
             </tbody>
           </table>

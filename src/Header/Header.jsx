@@ -1,297 +1,4 @@
-// import React, { useEffect, useState } from "react";
-// import { FaUserCircle, FaBell, FaSignOutAlt } from "react-icons/fa";
-// import { useNavigate } from "react-router-dom";
-// import Profile from "./Profile/Profile";
-// import Cookies from "js-cookie";
-// import { ToastContainer, toast } from "react-toastify";
-// import socket from "../socket";
-// import { useSelector, useDispatch } from "react-redux";
-// import { clearNotifications } from "../redux/notificationSlice";
 
-// const Header = () => {
-//   const notifications = useSelector((state) => state.notification.list);
-
-//   const [isUserPopupVisible, setIsUserPopupVisible] = useState(false);
-//   const [isNotificationPopupVisible, setIsNotificationPopupVisible] =
-//     useState(false);
-//   const [isProfileModalVisible, setIsProfileModalVisible] = useState(false);
-
-//   const [profilePic, setProfilePic] = useState(
-//     "https://via.placeholder.com/150"
-//   );
-//   const [profileName, setProfileName] = useState("Physiotherepist");
-//   const [collegeName, setCollegeName] = useState("");
-//   const navigate = useNavigate();
-//   const authToken = Cookies.get("authToken");
-//   const dispatch = useDispatch();
-
-//   useEffect(() => {
-//     const fetchProfileData = async () => {
-//       try {
-//         const response = await fetch(
-//           `${process.env.REACT_APP_BACKEND_URL}/apis/admin/getAdminProfile`,
-//           {
-//             method: "GET",
-//             headers: {
-//               Authorization: `Bearer ${authToken}`,
-//             },
-//           }
-//         );
-
-//         if (!response.ok)
-//           throw new Error(`HTTP error! status: ${response.status}`);
-
-//         const data = await response.json();
-//         if (data.data.length > 0) {
-//           const adminData = data.data[0];
-//           setCollegeName(adminData.collegeName || "");
-//           setProfilePic(adminData.image || "https://via.placeholder.com/150");
-//           setProfileName(adminData.collegeName || "Admin User");
-//         }
-//       } catch (err) {
-//         console.error("Error fetching profile:", err);
-//       }
-//     };
-
-//     fetchProfileData();
-//   }, [authToken]);
-
-//   console.log("College Name: ", collegeName);
-
-//   const toggleUserPopup = () => {
-//     setIsUserPopupVisible(!isUserPopupVisible);
-//     setIsNotificationPopupVisible(false);
-//   };
-
-//   const toggleNotificationPopup = () => {
-//     setIsNotificationPopupVisible(!isNotificationPopupVisible);
-//     setIsUserPopupVisible(false);
-//   };
-
-//   const handleLogout = () => {
-//     Cookies.remove("authToken", { path: "/" });
-//     localStorage.removeItem("userId");
-//     socket.disconnect();
-//     toast.success("Logout successful! Redirecting...", {
-//       position: "top-right",
-//     });
-//     setTimeout(() => navigate("/login"), 2000);
-//   };
-
-//   const handleSaveProfileChanges = (newProfilePic, newProfileName) => {
-//     setProfilePic(newProfilePic);
-//     setProfileName(newProfileName);
-//     setIsProfileModalVisible(false);
-//     toast.success("Profile updated successfully");
-//   };
-
-//   const handleProfile = () => {
-//     setIsProfileModalVisible(true);
-//     setIsUserPopupVisible(false);
-//   };
-
-//   // ✅ Rename to avoid conflict with the Redux action
-//   const handleClearNotifications = () => {
-//     dispatch(clearNotifications()); // This now correctly refers to the Redux action
-//     toast.info("All notifications cleared");
-//   };
-
-//   const closeProfileModal = () => {
-//     setIsProfileModalVisible(false);
-//   };
-
-//   const handleSeeAllNotifications = () => {
-//     navigate("/notifications");
-//   };
-
-//   return (
-//     <>
-//       {/* <header className="bg-gradient-to-r from-blue-700 to-indigo-900 text-white p-4 flex justify-between items-center shadow-xl"> */}
-//       <header className="bg-[#0B1B33] text-white p-4 flex justify-between items-center shadow-xl">
-//         <ToastContainer />
-//         <div className="flex justify-between  w-full pl-8">
-//           <h1 className="text-3xl font-bold underline">{collegeName}</h1>
-//           <div className="flex items-center space-x-6">
-//             <div className="relative group">
-//               <button
-//                 onClick={toggleNotificationPopup}
-//                 className="p-2 rounded-full hover:bg-white/10 transition-colors duration-200 relative"
-//               >
-//                 <FaBell className="text-xl" />
-//                 {notifications.length > 0 && (
-//                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-2 rounded-full">
-//                     {notifications.length}
-//                   </span>
-//                 )}
-//               </button>
-//               {isNotificationPopupVisible && (
-//                 <div className="absolute right-0 mt-2 bg-white text-gray-800 p-4 rounded-xl shadow-2xl w-72 transform origin-top transition-all duration-200">
-//                   <div className="flex justify-between items-center mb-4 border-b pb-2">
-//                     <h3 className="font-bold text-lg text-blue-700">
-//                       Notifications
-//                     </h3>
-//                     <div className="space-x-2">
-//                       <button
-//                         onClick={handleClearNotifications}
-//                         className="text-sm text-red-500 hover:text-red-700 transition-colors"
-//                       >
-//                         Clear All
-//                       </button>
-//                     </div>
-//                   </div>
-//                   {/* <ul className="max-h-60 overflow-y-auto">
-//                     {notifications.slice(0, 5).map((notification, index) => (
-//                       <li
-//                         key={index}
-//                         className="p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer text-sm"
-//                       >
-//                         <span className="mr-2 text-blue-500">•</span>
-//                         {notification}
-//                       </li>
-//                     ))}
-
-//                     {notifications.length > 5 && (
-//                       <li className="mt-3 text-center">
-//                         <button
-//                           onClick={handleSeeAllNotifications}
-//                           className="text-blue-500 hover:text-blue-700 text-sm font-medium"
-//                         >
-//                           View All Notifications →
-//                         </button>
-//                       </li>
-//                     )}
-
-//                     {notifications.length === 0 && (
-//                       <li className="text-gray-500 text-center py-4">
-//                         No new notifications
-//                       </li>
-//                     )}
-//                   </ul> */}
-
-//                   <ul className="max-h-60 overflow-y-auto">
-//                     {notifications.length === 0 ? (
-//                       <ul>
-//                       <li className="text-gray-500 text-center py-4">
-//                         No new notifications
-//                       </li>
-
-//                         <li className="mt-3 text-center">
-//                             <button
-//                               onClick={handleSeeAllNotifications}
-//                               className="text-blue-500 hover:text-blue-700 text-sm font-medium"
-//                             >
-//                               View All Previous Notifications →
-//                             </button>
-//                           </li>
-//                           </ul>
-
-//                     ) : (
-//                       <>
-//                         {notifications
-//                           .slice(0, 5)
-//                           .map((notification, index) => (
-//                             <li
-//                               key={index}
-//                               className="p-2 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer text-sm"
-//                             >
-//                               <span className="mr-2 text-blue-500">•</span>
-//                               {notification.message}
-//                               <p className="text-xs text-gray-400 mt-1">
-//                                 {new Date(
-//                                   notification.createdAt
-//                                 ).toLocaleString()}
-//                               </p>
-//                             </li>
-//                           ))}
-
-//                           <li className="mt-3 text-center">
-//                             <button
-//                               onClick={handleSeeAllNotifications}
-//                               className="text-blue-500 hover:text-blue-700 text-sm font-medium"
-//                             >
-//                               View All Notifications →
-//                             </button>
-//                           </li>
-
-//                       </>
-//                     )}
-//                   </ul>
-//                 </div>
-//               )}
-//             </div>
-//             <div className="relative group">
-//               <button
-//                 onClick={toggleUserPopup}
-//                 className="flex items-center space-x-2 p-2 rounded-full hover:bg-white/10 transition-colors duration-200"
-//               >
-//                 <img
-//                   src={profilePic}
-//                   alt="Profile"
-//                   className="w-8 h-8 rounded-full object-cover border-2 border-white"
-//                 />
-//                 <span className="font-medium">{profileName}</span>
-//               </button>
-
-//               {isUserPopupVisible && (
-//                 <div className="absolute right-0 mt-2 bg-white text-gray-800 p-4 rounded-xl shadow-2xl w-72 transform origin-top transition-all duration-200 z-50 ">
-//                   <div className="text-center mb-4">
-//                     <img
-//                       src={profilePic}
-//                       alt="Profile"
-//                       className="w-16 h-16 rounded-full object-cover mx-auto border-4 border-blue-100 mb-3"
-//                     />
-//                     <h4 className="font-bold text-lg">{profileName}</h4>
-//                     <p className="text-sm text-gray-500">Administrator</p>
-//                   </div>
-
-//                   <div className="space-y-2">
-//                     <button
-//                       onClick={handleProfile}
-//                       className="w-full p-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition-colors flex items-center justify-center"
-//                     >
-//                       <FaUserCircle className="mr-2" />
-//                       Edit Profile
-//                     </button>
-//                     <button
-//                       onClick={handleLogout}
-//                       className="w-full p-2 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg transition-colors flex items-center justify-center"
-//                     >
-//                       <FaSignOutAlt className="mr-2" />
-//                       Log Out
-//                     </button>
-//                   </div>
-//                 </div>
-//               )}
-
-//             </div>
-//           </div>
-//         </div>
-//       </header>
-
-//       {/* Profile Modal */}
-//       {isProfileModalVisible && (
-//         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 ">
-//           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg transform transition-all">
-//             <div className="p-6 border-b flex justify-between items-center">
-//               <h3 className="text-xl font-bold ">Edit Profile</h3>
-//               <button
-//                 onClick={closeProfileModal}
-//                 className="text-gray-500 hover:text-gray-700 text-2xl"
-//               >
-//                 &times;
-//               </button>
-//             </div>
-//             <div className="p-6">
-//               <Profile onSave={handleSaveProfileChanges} />
-//             </div>
-//           </div>
-//         </div>
-//       )}
-//     </>
-//   );
-// };
-
-// export default Header;
 
 // second version
 
@@ -306,6 +13,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { clearNotifications, markAsRead } from "../redux/notificationSlice";
 import { TailSpin, ThreeDots } from "react-loader-spinner";
 import ProfileModel from "../Component/ProfileModel/ProfileModel";
+import Modal from "../Component/Modal";
 
 const Header = () => {
   const notifications = useSelector((state) => state.notification.list);
@@ -345,7 +53,6 @@ const Header = () => {
     setLoading(true);
     try {
       const response = await fetch(
-        // http://localhost:9090/apis/physiotherapistAuth/getSinglePhysiotherapy
         "https://physiotherapy-1.onrender.com/apis/physiotherapistAuth/getSinglePhysiotherapy",
         {
           method: "GET",
@@ -634,23 +341,16 @@ const Header = () => {
 
       {/* Profile Modal */}
       {isProfileModalVisible && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-4 sm:p-6 rounded-lg w-[90%] max-w-md sm:max-w-lg md:max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold ">Edit Profile</h3>
-              <button
-                onClick={closeProfileModal}
-                className="text-gray-500 hover:text-gray-700 text-2xl"
-              >
-                &times;
-              </button>
-            </div>
-            <ProfileModel
+        <Modal
+          isOpen={isProfileModalVisible}
+          onClose={closeProfileModal}
+          title="Edit Profile"
+        >
+           <ProfileModel
               profile={profile}
               fetchProfileDataTest={fetchProfileDataTest}
             />
-          </div>
-        </div>
+        </Modal>
       )}
     </>
   );
