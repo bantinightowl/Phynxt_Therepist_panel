@@ -12,9 +12,10 @@ const PhysiotherapistOnboarding = () => {
     confirmPassword: '',
     bptCertificate: null,
     acceptedTerms: false,
+    referralCode: '',
     
     // Step 1
-    specialization: [],
+    specialization: '',
     services: [],
     sessionCost: '',
     sessionDuration: '',
@@ -22,7 +23,7 @@ const PhysiotherapistOnboarding = () => {
     // Step 2
     city: '',
     subLocation: '',
-    consultationMode: 'All',
+    consultationMode: ['All'],
     clinicName: '',
     workingDays: [],
     timeSlots: { start: '', end: '' },
@@ -45,20 +46,21 @@ const PhysiotherapistOnboarding = () => {
   const [mobileOtp, setMobileOtp] = useState('');
   const [emailOtp, setEmailOtp] = useState('');
   const [savingStatus, setSavingStatus] = useState('');
+  
 
   // Auto-save functionality
-  useEffect(() => {
-    const saveData = setTimeout(() => {
-      if (step > 0) {
-        localStorage.setItem('physioOnboardingData', JSON.stringify(formData));
-        localStorage.setItem('physioOnboardingStep', step.toString());
-        setSavingStatus('Autosaved successfully');
-        setTimeout(() => setSavingStatus(''), 2000);
-      }
-    }, 1000);
+  // useEffect(() => {
+  //   const saveData = setTimeout(() => {
+  //     if (step > 0) {
+  //       localStorage.setItem('physioOnboardingData', JSON.stringify(formData));
+  //       localStorage.setItem('physioOnboardingStep', step.toString());
+  //       setSavingStatus('Autosaved successfully');
+  //       setTimeout(() => setSavingStatus(''), 2000);
+  //     }
+  //   }, 1000);
     
-    return () => clearTimeout(saveData);
-  }, [formData, step]);
+  //   return () => clearTimeout(saveData);
+  // }, [formData, step]);
 
   // Load saved data on component mount
   useEffect(() => {
@@ -91,7 +93,7 @@ const PhysiotherapistOnboarding = () => {
         break;
         
       case 1:
-        if (formData.specialization.length === 0) newErrors.specialization = 'Specialization is required';
+        if (!formData.specialization) newErrors.specialization = 'Specialization is required';
         if (formData.services.length === 0) newErrors.services = 'At least one service is required';
         if (!formData.sessionCost) newErrors.sessionCost = 'Session cost is required';
         if (!formData.sessionDuration) newErrors.sessionDuration = 'Session duration is required';
@@ -100,7 +102,7 @@ const PhysiotherapistOnboarding = () => {
       case 2:
         if (!formData.city) newErrors.city = 'City is required';
         if (!formData.subLocation) newErrors.subLocation = 'Sub-location is required';
-        if (!formData.consultationMode) newErrors.consultationMode = 'Consultation mode is required';
+        if (formData.consultationMode.length === 0) newErrors.consultationMode = 'Consultation mode is required';
         break;
         
       case 3:
@@ -150,6 +152,23 @@ const PhysiotherapistOnboarding = () => {
         setFormData({ ...formData, workingDays: updatedDays });
       } else if (name === 'acceptedTerms') {
         setFormData({ ...formData, [name]: checked });
+      } else if (name === 'consultationMode') {
+        // Handle consultation mode with special logic for "All"
+        let updatedModes;
+        if (value === 'All') {
+          updatedModes = checked ? ['Clinic', 'Home', 'Online', 'All'] : [];
+        } else {
+          if (checked) {
+            updatedModes = [...formData.consultationMode, value];
+            // If all three specific modes are selected, add "All"
+            if (updatedModes.includes('Clinic') && updatedModes.includes('Home') && updatedModes.includes('Online')) {
+              updatedModes.push('All');
+            }
+          } else {
+            updatedModes = formData.consultationMode.filter(mode => mode !== value && mode !== 'All');
+          }
+        }
+        setFormData({ ...formData, [name]: updatedModes });
       } else {
         const updatedValues = checked
           ? [...formData[name], value]
@@ -227,7 +246,7 @@ const PhysiotherapistOnboarding = () => {
   };
 
   const steps = [
-    { title: 'Sign Up', progress: 20 },
+    { title: 'Sign Up', progress: 0 },
     { title: 'Profile Basics', progress: 40 },
     { title: 'Location & Consultation', progress: 60 },
     { title: 'Media & Languages', progress: 80 },
@@ -235,8 +254,14 @@ const PhysiotherapistOnboarding = () => {
   ];
 
   const specializationOptions = [
-    'Orthopedic', 'Neurological', 'Cardiopulmonary', 'Pediatric', 
-    'Geriatric', 'Sports', 'General BPT'
+    'Orthopedic Physiotherapist',
+    'Sports Physiotherapist',
+    'Neuro Physiotherapist',
+    'Child Physiotherapist',
+    'Women’s Health Physiotherapist',
+    'Heart & Lung Physiotherapist',
+    'Senior Citizen Physiotherapist',
+    'Cancer Rehab Physiotherapist'
   ];
 
   const serviceOptions = [
@@ -250,22 +275,136 @@ const PhysiotherapistOnboarding = () => {
     'Telugu', 'Bengali', 'Kannada', 'Malayalam', 'Punjabi'
   ];
 
+  // Custom multi-select component for Services
+  const ServiceMultiSelect = () => {
+    const [isOpen, setIsOpen] = useState(false);
+    
+    const toggleService = (service) => {
+      const updatedServices = formData.services.includes(service)
+        ? formData.services.filter(s => s !== service)
+        : [...formData.services, service];
+      setFormData({ ...formData, services: updatedServices });
+    };
+    
+    return (
+      <div className="relative">
+        <div 
+          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#009688] focus:border-[#009688] cursor-pointer ${errors.services ? 'border-red-500' : 'border-gray-300'}`}
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          <div className="flex flex-wrap gap-1">
+            {formData.services.length === 0 ? (
+              <span className="text-gray-400">Select services</span>
+            ) : (
+              formData.services.map(service => (
+                <span key={service} className="bg-[#004B87] text-white text-xs px-2 py-1 rounded">
+                  {service}
+                </span>
+              ))
+            )}
+          </div>
+        </div>
+        
+        {isOpen && (
+          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+            {serviceOptions.map(service => (
+              <div 
+                key={service}
+                className={`px-4 py-2 cursor-pointer hover:bg-gray-100 ${formData.services.includes(service) ? 'bg-blue-50' : ''}`}
+                onClick={() => toggleService(service)}
+              >
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={formData.services.includes(service)}
+                    onChange={() => {}}
+                    className="w-4 h-4 text-[#004B87] bg-gray-100 border-gray-300 rounded focus:ring-[#004B87]"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">{service}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {errors.services && <p className="mt-1 text-sm text-red-600">{errors.services}</p>}
+      </div>
+    );
+  };
+
+  // Custom multi-select component for Languages
+  const LanguageMultiSelect = () => {
+    const [isOpen, setIsOpen] = useState(false);
+    
+    const toggleLanguage = (language) => {
+      const updatedLanguages = formData.languages.includes(language)
+        ? formData.languages.filter(l => l !== language)
+        : [...formData.languages, language];
+      setFormData({ ...formData, languages: updatedLanguages });
+    };
+    
+    return (
+      <div className="relative">
+        <div 
+          className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#009688] focus:border-[#009688] cursor-pointer ${errors.languages ? 'border-red-500' : 'border-gray-300'}`}
+          onClick={() => setIsOpen(!isOpen)}
+        >
+          <div className="flex flex-wrap gap-1">
+            {formData.languages.length === 0 ? (
+              <span className="text-gray-400">Select languages</span>
+            ) : (
+              formData.languages.map(language => (
+                <span key={language} className="bg-[#004B87] text-white text-xs px-2 py-1 rounded">
+                  {language}
+                </span>
+              ))
+            )}
+          </div>
+        </div>
+        
+        {isOpen && (
+          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+            {languageOptions.map(language => (
+              <div 
+                key={language}
+                className={`px-4 py-2 cursor-pointer hover:bg-gray-100 ${formData.languages.includes(language) ? 'bg-blue-50' : ''}`}
+                onClick={() => toggleLanguage(language)}
+              >
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={formData.languages.includes(language)}
+                    onChange={() => {}}
+                    className="w-4 h-4 text-[#004B87] bg-gray-100 border-gray-300 rounded focus:ring-[#004B87]"
+                  />
+                  <span className="ml-2 text-sm text-gray-700">{language}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {errors.languages && <p className="mt-1 text-sm text-red-600">{errors.languages}</p>}
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
         {/* Progress Bar */}
         <div className="mb-10">
           <div className="flex justify-between items-center mb-2">
-            <h2 className="text-sm font-medium text-gray-600">
+            <h2 className="text-sm font-medium text-[#002B45]">
               Step {step + 1} of {steps.length}: {steps[step].title}
             </h2>
-            <span className="text-sm font-medium text-blue-600">
+            <span className="text-sm font-medium text-[#004B87]">
               {steps[step].progress}% Complete
             </span>
           </div>
           <div className="bg-gray-200 rounded-full h-2.5">
             <div 
-              className="bg-blue-600 h-2.5 rounded-full transition-all duration-500" 
+              className="bg-[#009688] h-2.5 rounded-full transition-all duration-500" 
               style={{ width: `${steps[step].progress}%` }}
             ></div>
           </div>
@@ -285,16 +424,16 @@ const PhysiotherapistOnboarding = () => {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -50 }}
             transition={{ duration: 0.3 }}
-            className="bg-white shadow rounded-lg p-6 mb-6"
+            className="bg-white shadow-lg rounded-lg p-6 mb-6 border border-gray-100"
           >
             {/* Step 0: Sign Up */}
             {step === 0 && (
               <div>
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">Create Your Account</h2>
+                <h2 className="text-2xl font-bold text-[#002B45] mb-6">Create Your Account</h2>
                 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-[#002B45] mb-1">
                       Full Name <span className="text-red-500">*</span>
                     </label>
                     <input
@@ -302,7 +441,7 @@ const PhysiotherapistOnboarding = () => {
                       name="fullName"
                       value={formData.fullName}
                       onChange={handleChange}
-                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.fullName ? 'border-red-500' : 'border-gray-300'}`}
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#009688] focus:border-[#009688] ${errors.fullName ? 'border-red-500' : 'border-gray-300'}`}
                       placeholder="Enter your full name"
                     />
                     {errors.fullName && <p className="mt-1 text-sm text-red-600">{errors.fullName}</p>}
@@ -310,7 +449,7 @@ const PhysiotherapistOnboarding = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-[#002B45] mb-1">
                         Mobile Number <span className="text-red-500">*</span>
                       </label>
                       <div className="flex">
@@ -319,13 +458,13 @@ const PhysiotherapistOnboarding = () => {
                           name="mobileNumber"
                           value={formData.mobileNumber}
                           onChange={handleChange}
-                          className={`flex-grow px-4 py-2 border rounded-l-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.mobileNumber ? 'border-red-500' : 'border-gray-300'}`}
+                          className={`flex-grow px-4 py-2 border rounded-l-lg focus:ring-2 focus:ring-[#009688] focus:border-[#009688] ${errors.mobileNumber ? 'border-red-500' : 'border-gray-300'}`}
                           placeholder="Enter mobile number"
                         />
                         <button
                           type="button"
                           onClick={() => sendOtp('mobile')}
-                          className="bg-blue-100 text-blue-700 px-4 rounded-r-lg hover:bg-blue-200 transition-colors"
+                          className="bg-[#004B87] text-white px-4 rounded-r-lg hover:bg-[#003B6F] transition-colors"
                         >
                           Send OTP
                         </button>
@@ -344,7 +483,7 @@ const PhysiotherapistOnboarding = () => {
                           <button
                             type="button"
                             onClick={() => verifyOtp('mobile', mobileOtp)}
-                            className="bg-blue-600 text-white px-4 rounded-r-lg hover:bg-blue-700 transition-colors"
+                            className="bg-[#009688] text-white px-4 rounded-r-lg hover:bg-[#00897B] transition-colors"
                           >
                             Verify
                           </button>
@@ -362,7 +501,7 @@ const PhysiotherapistOnboarding = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-[#002B45] mb-1">
                         Email Address <span className="text-red-500">*</span>
                       </label>
                       <div className="flex">
@@ -371,13 +510,13 @@ const PhysiotherapistOnboarding = () => {
                           name="email"
                           value={formData.email}
                           onChange={handleChange}
-                          className={`flex-grow px-4 py-2 border rounded-l-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.email ? 'border-red-500' : 'border-gray-300'}`}
+                          className={`flex-grow px-4 py-2 border rounded-l-lg focus:ring-2 focus:ring-[#009688] focus:border-[#009688] ${errors.email ? 'border-red-500' : 'border-gray-300'}`}
                           placeholder="Enter email address"
                         />
                         <button
                           type="button"
                           onClick={() => sendOtp('email')}
-                          className="bg-blue-100 text-blue-700 px-4 rounded-r-lg hover:bg-blue-200 transition-colors"
+                          className="bg-[#004B87] text-white px-4 rounded-r-lg hover:bg-[#003B6F] transition-colors"
                         >
                           Send OTP
                         </button>
@@ -396,7 +535,7 @@ const PhysiotherapistOnboarding = () => {
                           <button
                             type="button"
                             onClick={() => verifyOtp('email', emailOtp)}
-                            className="bg-blue-600 text-white px-4 rounded-r-lg hover:bg-blue-700 transition-colors"
+                            className="bg-[#009688] text-white px-4 rounded-r-lg hover:bg-[#00897B] transition-colors"
                           >
                             Verify
                           </button>
@@ -416,7 +555,7 @@ const PhysiotherapistOnboarding = () => {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-[#002B45] mb-1">
                         Password <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -424,14 +563,14 @@ const PhysiotherapistOnboarding = () => {
                         name="password"
                         value={formData.password}
                         onChange={handleChange}
-                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.password ? 'border-red-500' : 'border-gray-300'}`}
+                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#009688] focus:border-[#009688] ${errors.password ? 'border-red-500' : 'border-gray-300'}`}
                         placeholder="Create a password"
                       />
                       {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-[#002B45] mb-1">
                         Confirm Password <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -439,7 +578,7 @@ const PhysiotherapistOnboarding = () => {
                         name="confirmPassword"
                         value={formData.confirmPassword}
                         onChange={handleChange}
-                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300'}`}
+                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#009688] focus:border-[#009688] ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300'}`}
                         placeholder="Confirm your password"
                       />
                       {errors.confirmPassword && <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>}
@@ -447,7 +586,7 @@ const PhysiotherapistOnboarding = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-[#002B45] mb-1">
                       BPT Certificate <span className="text-red-500">*</span>
                     </label>
                     <div className="flex items-center">
@@ -486,16 +625,33 @@ const PhysiotherapistOnboarding = () => {
                         type="checkbox"
                         checked={formData.acceptedTerms}
                         onChange={handleChange}
-                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                        className="w-4 h-4 text-[#004B87] bg-gray-100 border-gray-300 rounded focus:ring-[#004B87]"
                       />
                     </div>
                     <div className="ml-3 text-sm">
-                      <label htmlFor="terms" className="font-medium text-gray-700">
-                        I accept the <a href="#" className="text-blue-600 hover:underline">Terms of Service</a> and <a href="#" className="text-blue-600 hover:underline">Privacy Policy</a> <span className="text-red-500">*</span>
+                      <label htmlFor="terms" className="font-medium text-[#002B45]">
+                        I accept the <a href="#" className="text-[#009688] hover:underline">Terms of Service</a> and <a href="#" className="text-[#009688] hover:underline">Privacy Policy</a> <span className="text-red-500">*</span>
                       </label>
                       {errors.acceptedTerms && <p className="mt-1 text-red-600">{errors.acceptedTerms}</p>}
                     </div>
                   </div>
+
+                     <div className="mb-4">
+                  <label
+                    className="block text-[#002B45] text-sm font-medium mb-2"
+                    htmlFor="referralCode"
+                  >
+                    Referral Code (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    id="referralCode"
+                    value={formData.referralCode}
+                    onChange={(e) => setFormData({ ...formData, referralCode: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#009688] focus:border-[#009688] focus:shadow-md transition-colors"
+                    placeholder="Enter referral code if you have one"
+                  />
+                </div>
                 </div>
               </div>
             )}
@@ -503,62 +659,37 @@ const PhysiotherapistOnboarding = () => {
             {/* Step 1: Profile Basics & Services */}
             {step === 1 && (
               <div>
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">Profile Basics & Services</h2>
+                <h2 className="text-2xl font-bold text-[#002B45] mb-6">Profile Basics & Services</h2>
                 
                 <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-[#002B45] mb-1">
                       Specialization <span className="text-red-500">*</span>
                     </label>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    <select
+                      name="specialization"
+                      value={formData.specialization}
+                      onChange={handleChange}
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#009688] focus:border-[#009688] ${errors.specialization ? 'border-red-500' : 'border-gray-300'}`}
+                    >
+                      <option value="">Select your specialization</option>
                       {specializationOptions.map((option) => (
-                        <div key={option} className="flex items-center">
-                          <input
-                            id={`specialization-${option}`}
-                            name="specialization"
-                            type="checkbox"
-                            value={option}
-                            checked={formData.specialization.includes(option)}
-                            onChange={handleChange}
-                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                          />
-                          <label htmlFor={`specialization-${option}`} className="ml-2 text-sm text-gray-700">
-                            {option}
-                          </label>
-                        </div>
+                        <option key={option} value={option}>{option}</option>
                       ))}
-                    </div>
+                    </select>
                     {errors.specialization && <p className="mt-1 text-sm text-red-600">{errors.specialization}</p>}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Services Offered <span className="text-red-500">*</span> (Select at least one)
+                    <label className="block text-sm font-medium text-[#002B45] mb-1">
+                      Services Offered <span className="text-red-500">*</span>
                     </label>
-                    <div className="grid grid-cols-2 gap-3">
-                      {serviceOptions.map((service) => (
-                        <div key={service} className="flex items-center">
-                          <input
-                            id={`service-${service}`}
-                            name="services"
-                            type="checkbox"
-                            value={service}
-                            checked={formData.services.includes(service)}
-                            onChange={handleChange}
-                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                          />
-                          <label htmlFor={`service-${service}`} className="ml-2 text-sm text-gray-700">
-                            {service}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                    {errors.services && <p className="mt-1 text-sm text-red-600">{errors.services}</p>}
+                    <ServiceMultiSelect />
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-[#002B45] mb-1">
                         Session Cost <span className="text-red-500">*</span>
                       </label>
                       <div className="relative rounded-md shadow-sm">
@@ -570,7 +701,7 @@ const PhysiotherapistOnboarding = () => {
                           name="sessionCost"
                           value={formData.sessionCost}
                           onChange={handleChange}
-                          className={`block w-full pl-7 pr-12 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.sessionCost ? 'border-red-500' : 'border-gray-300'}`}
+                          className={`block w-full pl-7 pr-12 py-2 border rounded-lg focus:ring-2 focus:ring-[#009688] focus:border-[#009688] ${errors.sessionCost ? 'border-red-500' : 'border-gray-300'}`}
                           placeholder="0.00"
                         />
                         <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
@@ -581,20 +712,20 @@ const PhysiotherapistOnboarding = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-[#002B45] mb-1">
                         Average Session Duration <span className="text-red-500">*</span>
                       </label>
                       <select
                         name="sessionDuration"
                         value={formData.sessionDuration}
                         onChange={handleChange}
-                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.sessionDuration ? 'border-red-500' : 'border-gray-300'}`}
+                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#009688] focus:border-[#009688] ${errors.sessionDuration ? 'border-red-500' : 'border-gray-300'}`}
                       >
                         <option value="">Select duration</option>
-                        <option value="30">30 minutes</option>
                         <option value="40">40 minutes</option>
                         <option value="45">45 minutes</option>
                         <option value="60">60 minutes</option>
+                        <option value="90">90 minutes</option>
                       </select>
                       {errors.sessionDuration && <p className="mt-1 text-sm text-red-600">{errors.sessionDuration}</p>}
                     </div>
@@ -606,12 +737,12 @@ const PhysiotherapistOnboarding = () => {
             {/* Step 2: Location & Consultation Preferences */}
             {step === 2 && (
               <div>
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">Location & Consultation Preferences</h2>
+                <h2 className="text-2xl font-bold text-[#002B45] mb-6">Location & Consultation Preferences</h2>
                 
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-[#002B45] mb-1">
                         City <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -619,14 +750,14 @@ const PhysiotherapistOnboarding = () => {
                         name="city"
                         value={formData.city}
                         onChange={handleChange}
-                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.city ? 'border-red-500' : 'border-gray-300'}`}
+                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#009688] focus:border-[#009688] ${errors.city ? 'border-red-500' : 'border-gray-300'}`}
                         placeholder="Enter your city"
                       />
                       {errors.city && <p className="mt-1 text-sm text-red-600">{errors.city}</p>}
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-[#002B45] mb-1">
                         Sub-location/Area <span className="text-red-500">*</span>
                       </label>
                       <input
@@ -634,7 +765,7 @@ const PhysiotherapistOnboarding = () => {
                         name="subLocation"
                         value={formData.subLocation}
                         onChange={handleChange}
-                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.subLocation ? 'border-red-500' : 'border-gray-300'}`}
+                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#009688] focus:border-[#009688] ${errors.subLocation ? 'border-red-500' : 'border-gray-300'}`}
                         placeholder="Enter area or pincode"
                       />
                       {errors.subLocation && <p className="mt-1 text-sm text-red-600">{errors.subLocation}</p>}
@@ -642,7 +773,7 @@ const PhysiotherapistOnboarding = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-[#002B45] mb-2">
                       Consultation Mode <span className="text-red-500">*</span>
                     </label>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -651,13 +782,13 @@ const PhysiotherapistOnboarding = () => {
                           <input
                             id={`mode-${mode}`}
                             name="consultationMode"
-                            type="radio"
+                            type="checkbox"
                             value={mode}
-                            checked={formData.consultationMode === mode}
+                            checked={formData.consultationMode.includes(mode)}
                             onChange={handleChange}
-                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500"
+                            className="w-4 h-4 text-[#004B87] bg-gray-100 border-gray-300 rounded focus:ring-[#004B87]"
                           />
-                          <label htmlFor={`mode-${mode}`} className="ml-2 text-sm text-gray-700">
+                          <label htmlFor={`mode-${mode}`} className="ml-2 text-sm text-[#002B45]">
                             {mode}
                           </label>
                         </div>
@@ -666,9 +797,9 @@ const PhysiotherapistOnboarding = () => {
                     {errors.consultationMode && <p className="mt-1 text-sm text-red-600">{errors.consultationMode}</p>}
                   </div>
 
-                  {formData.consultationMode === 'Clinic' || formData.consultationMode === 'All' ? (
+                  {(formData.consultationMode.includes('Clinic') || formData.consultationMode.includes('All')) && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-[#002B45] mb-1">
                         Clinic Name (Optional)
                       </label>
                       <input
@@ -676,14 +807,14 @@ const PhysiotherapistOnboarding = () => {
                         name="clinicName"
                         value={formData.clinicName}
                         onChange={handleChange}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#009688] focus:border-[#009688]"
                         placeholder="Enter clinic name"
                       />
                     </div>
-                  ) : null}
+                  )}
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-[#002B45] mb-2">
                       Working Days (Optional)
                     </label>
                     <div className="grid grid-cols-2 md:grid-cols-7 gap-2">
@@ -696,9 +827,9 @@ const PhysiotherapistOnboarding = () => {
                             value={day}
                             checked={formData.workingDays.includes(day)}
                             onChange={handleChange}
-                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                            className="w-4 h-4 text-[#004B87] bg-gray-100 border-gray-300 rounded focus:ring-[#004B87]"
                           />
-                          <label htmlFor={`day-${day}`} className="ml-1 text-sm text-gray-700">
+                          <label htmlFor={`day-${day}`} className="ml-1 text-sm text-[#002B45]">
                             {day}
                           </label>
                         </div>
@@ -707,7 +838,7 @@ const PhysiotherapistOnboarding = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-[#002B45] mb-2">
                       Time Slots (Optional)
                     </label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -721,7 +852,7 @@ const PhysiotherapistOnboarding = () => {
                             ...formData, 
                             timeSlots: {...formData.timeSlots, start: e.target.value}
                           })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#009688] focus:border-[#009688]"
                         />
                       </div>
                       <div>
@@ -734,7 +865,7 @@ const PhysiotherapistOnboarding = () => {
                             ...formData, 
                             timeSlots: {...formData.timeSlots, end: e.target.value}
                           })}
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#009688] focus:border-[#009688]"
                         />
                       </div>
                     </div>
@@ -746,11 +877,11 @@ const PhysiotherapistOnboarding = () => {
             {/* Step 3: Profile Media & Languages */}
             {step === 3 && (
               <div>
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">Profile Media & Languages</h2>
+                <h2 className="text-2xl font-bold text-[#002B45] mb-6">Profile Media & Languages</h2>
                 
                 <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-[#002B45] mb-1">
                       Profile Picture <span className="text-red-500">*</span>
                     </label>
                     <div className="flex items-center justify-center w-full">
@@ -782,14 +913,14 @@ const PhysiotherapistOnboarding = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-[#002B45] mb-1">
                       Intro/Skill Video (Optional, max 1 min)
                     </label>
                     <div className="flex items-center justify-center w-full">
                       <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 border-gray-300">
                         <div className="flex flex-col items-center justify-center pt-5 pb-6">
                           <svg className="w-8 h-8 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
-                            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                            <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 极 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
                           </svg>
                           <p className="mb-2 text-sm text-gray-500">
                             <span className="font-semibold">Click to upload</span> video
@@ -813,17 +944,17 @@ const PhysiotherapistOnboarding = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-[#002B45] mb-1">
                       Key Skills (Optional)
                     </label>
                     <div className="flex flex-wrap gap-2 mb-2">
                       {formData.keySkills.map((skill, index) => (
-                        <span key={index} className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                        <span key={index} className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[#004B87] text-white">
                           {skill}
                           <button
                             type="button"
                             onClick={() => handleSkillRemove(skill)}
-                            className="ml-1.5 rounded-full flex-shrink-0 text-blue-500 hover:text-blue-700"
+                            className="ml-1.5 rounded-full flex-shrink-0 text-white hover:text-gray-200"
                           >
                             <span className="sr-only">Remove</span>
                             <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
@@ -843,7 +974,7 @@ const PhysiotherapistOnboarding = () => {
                             e.target.value = '';
                           }
                         }}
-                        className="flex-grow px-4 py-2 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="flex-grow px-4 py-2 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-[#009688] focus:border-[#009688]"
                       />
                       <button
                         type="button"
@@ -852,7 +983,7 @@ const PhysiotherapistOnboarding = () => {
                           handleSkillAdd(input.value);
                           input.value = '';
                         }}
-                        className="bg-blue-600 text-white px-4 rounded-r-lg hover:bg-blue-700 transition-colors"
+                        className="bg-[#009688] text-white px-4 rounded-r-lg hover:bg-[#00897B] transition-colors"
                       >
                         Add
                       </button>
@@ -860,28 +991,10 @@ const PhysiotherapistOnboarding = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Languages Spoken <span className="text-red-500">*</span> (Select at least one)
+                    <label className="block text-sm font-medium text-[#002B45] mb-1">
+                      Languages Spoken <span className="text-red-500">*</span>
                     </label>
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                      {languageOptions.map((language) => (
-                        <div key={language} className="flex items-center">
-                          <input
-                            id={`language-${language}`}
-                            name="languages"
-                            type="checkbox"
-                            value={language}
-                            checked={formData.languages.includes(language)}
-                            onChange={handleChange}
-                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                          />
-                          <label htmlFor={`language-${language}`} className="ml-2 text-sm text-gray-700">
-                            {language}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                    {errors.languages && <p className="mt-1 text-sm text-red-600">{errors.languages}</p>}
+                    <LanguageMultiSelect />
                   </div>
                 </div>
               </div>
@@ -890,18 +1003,18 @@ const PhysiotherapistOnboarding = () => {
             {/* Step 4: Discovery & Final Preview */}
             {step === 4 && (
               <div>
-                <h2 className="text-2xl font-bold text-gray-800 mb-6">Discovery & Final Preview</h2>
+                <h2 className="text-2xl font-bold text-[#002B45] mb-6">Discovery & Final Preview</h2>
                 
                 <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-[#002B45] mb-1">
                       How Did You Hear About Us? <span className="text-red-500">*</span>
                     </label>
                     <select
                       name="discoverySource"
                       value={formData.discoverySource}
                       onChange={handleChange}
-                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.discoverySource ? 'border-red-500' : 'border-gray-300'}`}
+                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#009688] focus:border-[#009688] ${errors.discoverySource ? 'border-red-500' : 'border-gray-300'}`}
                     >
                       <option value="">Select an option</option>
                       <option value="Instagram">Instagram</option>
@@ -916,7 +1029,7 @@ const PhysiotherapistOnboarding = () => {
 
                   {formData.discoverySource === 'Referral' && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-[#002B45] mb-1">
                         Referral Name (Optional)
                       </label>
                       <input
@@ -924,7 +1037,7 @@ const PhysiotherapistOnboarding = () => {
                         name="referralName"
                         value={formData.referralName}
                         onChange={handleChange}
-                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${errors.referralName ? 'border-red-500' : 'border-gray-300'}`}
+                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#009688] focus:border-[#009688] ${errors.referralName ? 'border-red-500' : 'border-gray-300'}`}
                         placeholder="Enter referral name"
                       />
                       {errors.referralName && <p className="mt-1 text-sm text-red-600">{errors.referralName}</p>}
@@ -932,7 +1045,7 @@ const PhysiotherapistOnboarding = () => {
                   )}
 
                   <div className="border-t border-gray-200 pt-6">
-                    <h3 className="text-lg font-medium text-gray-800 mb-4">Profile Preview</h3>
+                    <h3 className="text-lg font-medium text-[#002B45] mb-4">Profile Preview</h3>
                     
                     <div className="bg-gray-50 rounded-lg p-4 mb-4">
                       <div className="flex items-center mb-4">
@@ -945,17 +1058,14 @@ const PhysiotherapistOnboarding = () => {
                             />
                           ) : (
                             <svg className="w-8 h-8 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                              <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 极 0 1114 0H3z" clipRule="evenodd" />
                             </svg>
                           )}
                         </div>
                         <div>
-                          <h4 className="font-medium text-gray-800">{formData.fullName || 'Your Name'}</h4>
+                          <h4 className="font-medium text-[#002B45]">{formData.fullName || 'Your Name'}</h4>
                           <p className="text-sm text-gray-600">
-                            {formData.specialization.length > 0 
-                              ? formData.specialization.join(', ') 
-                              : 'Specialization'
-                            }
+                            {formData.specialization || 'Specialization'}
                           </p>
                         </div>
                       </div>
@@ -968,7 +1078,7 @@ const PhysiotherapistOnboarding = () => {
                         </div>
                         <div>
                           <p><span className="font-medium">Location:</span> {formData.city || 'Not specified'}, {formData.subLocation || ''}</p>
-                          <p><span className="font-medium">Consultation:</span> {formData.consultationMode || 'Not specified'}</p>
+                          <p><span className="font-medium">Consultation:</span> {formData.consultationMode.join(', ') || 'Not specified'}</p>
                           <p><span className="font-medium">Languages:</span> {formData.languages.join(', ') || 'Not specified'}</p>
                         </div>
                       </div>
@@ -985,12 +1095,12 @@ const PhysiotherapistOnboarding = () => {
         </AnimatePresence>
 
         {/* Navigation Buttons */}
-        <div className="flex justify-between">
+        <div className="flex justify-between gap-3 md:gap-0">
           <button
             type="button"
             onClick={prevStep}
             disabled={step === 0}
-            className={`px-6 py-2 rounded-lg font-medium ${step === 0 ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
+            className={`px-6 py-2 rounded-lg font-medium ${step === 0 ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-[#FFC107] text-[#002B45] hover:bg-[#FFA000]'}`}
           >
             Previous
           </button>
@@ -999,7 +1109,7 @@ const PhysiotherapistOnboarding = () => {
             <button
               type="button"
               onClick={saveAndContinueLater}
-              className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-100"
+              className="px-6 py-2 border border-gray-300 rounded-lg text-[#002B45] font-medium hover:bg-gray-100"
             >
               Save & Continue Later
             </button>
@@ -1008,7 +1118,7 @@ const PhysiotherapistOnboarding = () => {
               <button
                 type="button"
                 onClick={nextStep}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
+                className="px-6 py-2 bg-[#004B87] text-white rounded-lg font-medium hover:bg-[#003B6F]"
               >
                 Next
               </button>
@@ -1017,7 +1127,7 @@ const PhysiotherapistOnboarding = () => {
                 type="button"
                 onClick={submitForm}
                 disabled={isSubmitting}
-                className="px-6 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 disabled:bg-green-400"
+                className="px-6 py-2 bg-[#009688] text-white rounded-lg font-medium hover:bg-[#00897B] disabled:bg-gray-400"
               >
                 {isSubmitting ? 'Submitting...' : 'Complete Registration'}
               </button>
@@ -1032,285 +1142,6 @@ const PhysiotherapistOnboarding = () => {
 export default PhysiotherapistOnboarding;
 
 
-// import React, { useState } from 'react';
-
-// const PhysNXTOnboarding = () => {
-//   const [currentStep, setCurrentStep] = useState(1);
-//   const [activeSection, setActiveSection] = useState('signup');
-//   const [formData, setFormData] = useState({
-//     fullName: '',
-//     phone: '',
-//     email: '',
-//     password: '',
-//     confirmPassword: '',
-//     // Additional form fields would go here
-//   });
-
-//   const handleInputChange = (e) => {
-//     const { name, value } = e.target;
-//     setFormData({
-//       ...formData,
-//       [name]: value
-//     });
-//   };
-
-//   const handleContinue = () => {
-//     if (activeSection === 'signup') {
-//       setActiveSection('profile');
-//       setCurrentStep(2);
-//     } else if (activeSection === 'profile' && currentStep < 12) {
-//       setCurrentStep(currentStep + 1);
-//     } else if (activeSection === 'profile' && currentStep === 12) {
-//       setActiveSection('approval');
-//     } else if (activeSection === 'approval') {
-//       setActiveSection('dashboard');
-//     }
-//   };
-
-//   const handleSaveAndContinue = () => {
-//     // In a real app, this would save progress to backend/localStorage
-//     alert('Progress saved successfully! You can continue later.');
-//   };
-
-//   const renderSignUpStep = () => (
-//     <div className="space-y-6">
-//       <h2 className="text-2xl font-bold text-[#002B45]">Create Your Account</h2>
-      
-//       <div className="space-y-4">
-//         <div>
-//           <label className="block text-sm font-medium text-[#002B45] mb-1">Full Name</label>
-//           <input
-//             type="text"
-//             name="fullName"
-//             value={formData.fullName}
-//             onChange={handleInputChange}
-//             className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-[#009688] focus:border-transparent"
-//             placeholder="Enter your full name"
-//           />
-//         </div>
-        
-//         <div>
-//           <label className="block text-sm font-medium text-[#002B45] mb-1">Phone Number</label>
-//           <div className="flex space-x-2">
-//             <input
-//               type="tel"
-//               name="phone"
-//               value={formData.phone}
-//               onChange={handleInputChange}
-//               className="flex-1 px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-[#009688] focus:border-transparent"
-//               placeholder="Your phone number"
-//             />
-//             <button className="px-4 bg-[#009688] text-white rounded-2xl font-medium text-sm whitespace-nowrap">
-//               Send OTP
-//             </button>
-//           </div>
-//         </div>
-        
-//         <div>
-//           <label className="block text-sm font-medium text-[#002B45] mb-1">Email Address</label>
-//           <div className="flex space-x-2">
-//             <input
-//               type="email"
-//               name="email"
-//               value={formData.email}
-//               onChange={handleInputChange}
-//               className="flex-1 px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-[#009688] focus:border-transparent"
-//               placeholder="Your email address"
-//             />
-//             <button className="px-4 bg-[#009688] text-white rounded-2xl font-medium text-sm whitespace-nowrap">
-//               Send OTP
-//             </button>
-//           </div>
-//         </div>
-        
-//         <div>
-//           <label className="block text-sm font-medium text-[#002B45] mb-1">Password</label>
-//           <input
-//             type="password"
-//             name="password"
-//             value={formData.password}
-//             onChange={handleInputChange}
-//             className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-[#009688] focus:border-transparent"
-//             placeholder="Create a secure password"
-//           />
-//         </div>
-        
-//         <div>
-//           <label className="block text-sm font-medium text-[#002B45] mb-1">Confirm Password</label>
-//           <input
-//             type="password"
-//             name="confirmPassword"
-//             value={formData.confirmPassword}
-//             onChange={handleInputChange}
-//             className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-[#009688] focus:border-transparent"
-//             placeholder="Confirm your password"
-//           />
-//         </div>
-//       </div>
-//     </div>
-//   );
-
-//   const renderProfileStep = () => (
-//     <div className="space-y-6">
-//       <h2 className="text-2xl font-bold text-[#002B45]">Profile Information</h2>
-//       <p className="text-[#002B45]">Step {currentStep} of 12</p>
-      
-//       {/* Example of a profile step - in a real app, each step would have different fields */}
-//       <div className="space-y-4">
-//         <div>
-//           <label className="block text-sm font-medium text-[#002B45] mb-1">Specialization</label>
-//           <select className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-[#009688] focus:border-transparent">
-//             <option value="">Select your specialization</option>
-//             <option value="orthopedic">Orthopedic Physiotherapy</option>
-//             <option value="sports">Sports Physiotherapy</option>
-//             <option value="neurological">Neurological Physiotherapy</option>
-//             <option value="pediatric">Pediatric Physiotherapy</option>
-//           </select>
-//         </div>
-        
-//         <div>
-//           <label className="block text-sm font-medium text-[#002B45] mb-1">Years of Experience</label>
-//           <input
-//             type="number"
-//             className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-[#009688] focus:border-transparent"
-//             placeholder="Enter years of experience"
-//           />
-//         </div>
-        
-//         <div>
-//           <label className="block text-sm font-medium text-[#002B45] mb-1">Qualifications</label>
-//           <textarea
-//             className="w-full px-4 py-3 border border-gray-300 rounded-2xl focus:ring-2 focus:ring-[#009688] focus:border-transparent"
-//             rows="3"
-//             placeholder="List your qualifications and certifications"
-//           ></textarea>
-//         </div>
-//       </div>
-//     </div>
-//   );
-
-//   const renderApprovalStep = () => (
-//     <div className="space-y-6 text-center">
-//       <h2 className="text-2xl font-bold text-[#002B45]">Admin Approval</h2>
-      
-//       <div className="bg-white p-6 rounded-2xl shadow-sm">
-//         <div className="flex justify-between items-center mb-6">
-//           <div className={`flex-1 h-2 rounded-full ${activeSection === 'approval' ? 'bg-[#009688]' : 'bg-gray-300'}`}></div>
-//           <div className="mx-2 w-2 h-2 rounded-full bg-gray-300"></div>
-//           <div className={`flex-1 h-2 rounded-full ${activeSection === 'dashboard' ? 'bg-[#009688]' : 'bg-gray-300'}`}></div>
-//         </div>
-        
-//         <div className="flex justify-between mb-8">
-//           <div className="text-center">
-//             <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2 ${activeSection === 'approval' ? 'bg-[#009688]' : 'bg-gray-300'}`}>
-//               <span className={`text-lg font-bold ${activeSection === 'approval' ? 'text-white' : 'text-gray-500'}`}>1</span>
-//             </div>
-//             <p className={`text-sm font-medium ${activeSection === 'approval' ? 'text-[#009688]' : 'text-gray-500'}`}>Pending Approval</p>
-//           </div>
-          
-//           <div className="text-center">
-//             <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2 ${activeSection === 'dashboard' ? 'bg-[#009688]' : 'bg-gray-300'}`}>
-//               <span className={`text-lg font-bold ${activeSection === 'dashboard' ? 'text-white' : 'text-gray-500'}`}>2</span>
-//             </div>
-//             <p className={`text-sm font-medium ${activeSection === 'dashboard' ? 'text-[#009688]' : 'text-gray-500'}`}>Approved</p>
-//           </div>
-          
-//           <div className="text-center">
-//             <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2 ${activeSection === 'dashboard' ? 'bg-[#009688]' : 'bg-gray-300'}`}>
-//               <span className={`text-lg font-bold ${activeSection === 'dashboard' ? 'text-white' : 'text-gray-500'}`}>3</span>
-//             </div>
-//             <p className={`text-sm font-medium ${activeSection === 'dashboard' ? 'text-[#009688]' : 'text-gray-500'}`}>Live on Platform</p>
-//           </div>
-//         </div>
-        
-//         <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
-//           <p className="text-[#002B45]">Your profile is currently under review. We'll notify you once it's approved. This usually takes 24-48 hours.</p>
-//         </div>
-//       </div>
-//     </div>
-//   );
-
-//   const renderDashboardStep = () => (
-//     <div className="space-y-6 text-center">
-//       <div className="w-20 h-20 bg-[#009688] rounded-full flex items-center justify-center mx-auto mb-4">
-//         <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-//           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-//         </svg>
-//       </div>
-      
-//       <h2 className="text-2xl font-bold text-[#002B45]">Approved Successfully!</h2>
-//       <p className="text-[#002B45]">Your profile is now live on the platform. You can access your dashboard to start connecting with patients.</p>
-      
-//       <button className="w-full py-3 bg-[#009688] text-white rounded-2xl font-bold uppercase shadow-md hover:bg-teal-700 transition-colors">
-//         Go to Dashboard
-//       </button>
-//     </div>
-//   );
-
-//   return (
-//     <div 
-//       className="min-h-screen flex items-center justify-center p-4 bg-cover bg-center"
-//       style={{ backgroundImage: "url('/assets/login2.png')" }}
-//     >
-//       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
-//         <div className="p-6 border-b border-gray-200">
-//           <div className="flex justify-between items-center mb-6">
-//             <h1 className="text-2xl font-bold text-[#004B87]">PhysNXT</h1>
-//             <div className="text-sm font-medium text-[#002B45]">
-//               {activeSection === 'signup' && 'Step 1 of 4'}
-//               {activeSection === 'profile' && `Step ${currentStep} of 12`}
-//               {activeSection === 'approval' && 'Step 3 of 4'}
-//               {activeSection === 'dashboard' && 'Step 4 of 4'}
-//             </div>
-//           </div>
-          
-//           <div className="flex mb-6">
-//             <div className={`flex-1 h-2 rounded-full ${activeSection !== 'signup' ? 'bg-[#009688]' : 'bg-gray-300'}`}></div>
-//             <div className="mx-2 w-2 h-2 rounded-full bg-gray-300"></div>
-//             <div className={`flex-1 h-2 rounded-full ${activeSection === 'profile' || activeSection === 'approval' || activeSection === 'dashboard' ? 'bg-[#009688]' : 'bg-gray-300'}`}></div>
-//             <div className="mx-2 w-2 h-2 rounded-full bg-gray-300"></div>
-//             <div className={`flex-1 h-2 rounded-full ${activeSection === 'approval' || activeSection === 'dashboard' ? 'bg-[#009688]' : 'bg-gray-300'}`}></div>
-//             <div className="mx-2 w-2 h-2 rounded-full bg-gray-300"></div>
-//             <div className={`flex-1 h-2 rounded-full ${activeSection === 'dashboard' ? 'bg-[#009688]' : 'bg-gray-300'}`}></div>
-//           </div>
-//         </div>
-        
-//         <div className="p-6">
-//           {activeSection === 'signup' && renderSignUpStep()}
-//           {activeSection === 'profile' && renderProfileStep()}
-//           {activeSection === 'approval' && renderApprovalStep()}
-//           {activeSection === 'dashboard' && renderDashboardStep()}
-//         </div>
-        
-//         <div className="p-6 bg-gray-50 space-y-4">
-//           {(activeSection === 'signup' || activeSection === 'profile') && (
-//             <>
-//               <button 
-//                 onClick={handleContinue}
-//                 className="w-full py-3 bg-[#009688] text-white rounded-2xl font-bold uppercase shadow-md hover:bg-teal-700 transition-colors"
-//               >
-//                 Continue
-//               </button>
-              
-//               <button 
-//                 onClick={handleSaveAndContinue}
-//                 className="w-full py-3 border border-[#009688] text-[#009688] rounded-2xl font-bold uppercase hover:bg-teal-50 transition-colors"
-//               >
-//                 Save & Continue Later
-//               </button>
-//             </>
-//           )}
-          
-//           <p className="text-center text-xs text-gray-500">
-//             🔒 Your details are safe & secured with PhysNXT.
-//           </p>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default PhysNXTOnboarding;
 
 
 

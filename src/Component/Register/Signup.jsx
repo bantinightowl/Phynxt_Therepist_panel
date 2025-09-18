@@ -7,18 +7,20 @@ import { TiEye } from "react-icons/ti";
 import { RiEyeCloseLine } from "react-icons/ri";
 import { IoArrowBack } from "react-icons/io5";
 import { FaCheckCircle } from "react-icons/fa";
+import logo from "../../assets/physio_logo.jfif";
 
 const SignUp = () => {
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [referralCode, setReferralCode] = useState("");
   const [certificates, setCertificates] = useState([]);
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   
@@ -40,6 +42,10 @@ const SignUp = () => {
 
   const handleShowPassword = () => {
     setShowPassword((pre) => !pre);
+  };
+
+  const handleShowConfirmPassword = () => {
+    setShowConfirmPassword((pre) => !pre);
   };
 
   const validatePassword = (password) => {
@@ -162,6 +168,11 @@ const SignUp = () => {
   const handleSignup = async (e) => {
     e.preventDefault();
 
+    // Split full name into first and last name
+    const nameParts = fullName.split(' ');
+    const firstName = nameParts[0];
+    const lastName = nameParts.slice(1).join(' ') || '';
+
     if (!validatePassword(password)) {
       setError(
         "Password must be at least 8 characters long and include uppercase, lowercase, number, and special character."
@@ -169,6 +180,11 @@ const SignUp = () => {
       return;
     } else {
       setError("");
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
     }
 
     if (!agreedToTerms) {
@@ -245,17 +261,11 @@ const SignUp = () => {
             {/* Company Logo and Name */}
             <div className="flex items-center justify-center mb-6">
               <div className="flex items-center space-x-2">
-                <div className="w-10 h-10 bg-[#009688] rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">P</span>
-                </div>
-                <h1 className="text-2xl font-bold text-[#002B45]">PHYNXT</h1>
+                <img src={logo} alt="PHYNXT Logo" className="w-40 h-15" />
               </div>
             </div>
             
             <div className="flex items-center gap-2 mb-6">
-              {/* <a href="https://physnxt.in/" className="text-xl hover:text-blue-800 flex items-center text-[#004B87]">
-                <IoArrowBack className="text-2xl" />
-              </a> */}
               <h2 className="text-2xl font-bold text-left text-[#002B45]">Sign Up</h2>
             </div>
             
@@ -264,38 +274,19 @@ const SignUp = () => {
             )}
             
             <form onSubmit={handleSignup} encType="multipart/form-data" className="space-y-4">
-              <div className="flex flex-col sm:flex-row gap-4 mb-4">
-                <div className="w-full sm:w-1/2">
-                  <label className="block text-[#002B45] text-sm font-medium mb-2" htmlFor="firstName">
-                    First Name<span className="text-red-500">*</span>
-                  </label>
-                  <input 
-                    type="text" 
-                    id="firstName" 
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#009688] focus:border-[#009688] focus:shadow-md transition-colors"
-                    required 
-                    placeholder="First Name"
-                  />
-                </div>
-                <div className="w-full sm:w-1/2">
-                  <label
-                    className="block text-[#002B45] text-sm font-medium mb-2"
-                    htmlFor="lastName"
-                  >
-                    Last Name
-                  </label>
-                  <input
-                    type="text"
-                    id="lastName"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#009688] focus:border-[#009688] focus:shadow-md transition-colors"
-                    required
-                    placeholder="Last Name"
-                  />
-                </div>
+              <div className="mb-4">
+                <label className="block text-[#002B45] text-sm font-medium mb-2" htmlFor="fullName">
+                  Full Name<span className="text-red-500">*</span>
+                </label>
+                <input 
+                  type="text" 
+                  id="fullName" 
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#009688] focus:border-[#009688] focus:shadow-md transition-colors"
+                  required 
+                  placeholder="Enter your full name"
+                />
               </div>
               
               {/* Email and Phone in same row for large screens */}
@@ -403,47 +394,53 @@ const SignUp = () => {
                 />
               </div>
 
-              <div className="mb-4">
-                <label
-                  className="block text-[#002B45] text-sm font-medium mb-2"
-                  htmlFor="referralCode"
-                >
-                  Referral Code (Optional)
-                </label>
-                <input
-                  type="text"
-                  id="referralCode"
-                  value={referralCode}
-                  onChange={(e) => setReferralCode(e.target.value)}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#009688] focus:border-[#009688] focus:shadow-md transition-colors"
-                  placeholder="Enter referral code if you have one"
-                />
-              </div>
-
-              <div className="mb-4">
-                <label
-                  className="block text-[#002B45] text-sm font-medium mb-2"
-                  htmlFor="password"
-                >
-                  Password<span className="text-red-500">*</span>
-                </label>
-                <div className="border border-gray-300 rounded-lg flex items-center focus-within:ring-2 focus-within:ring-[#009688] focus-within:border-[#009688] focus-within:shadow-md transition-colors">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    id="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-4 py-2.5 focus:outline-none bg-transparent"
-                    required
-                    placeholder="Password"
-                  />
-                  <button type="button" className="pr-3 text-gray-500 hover:text-[#004B87]" onClick={handleShowPassword}>
-                    {showPassword ? <TiEye className="text-xl" /> : <RiEyeCloseLine className="text-xl" />}
-                  </button>
+              <div className="flex flex-col md:flex-row gap-4 mb-4">
+                <div className="w-full">
+                  <label
+                    className="block text-[#002B45] text-sm font-medium mb-2"
+                    htmlFor="password"
+                  >
+                    Password<span className="text-red-500">*</span>
+                  </label>
+                  <div className="border border-gray-300 rounded-lg flex items-center focus-within:ring-2 focus-within:ring-[#009688] focus-within:border-[#009688] focus-within:shadow-md transition-colors">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      id="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full px-4 py-2.5 focus:outline-none bg-transparent"
+                      required
+                      placeholder="Password"
+                    />
+                    <button type="button" className="pr-3 text-gray-500 hover:text-[#004B87]" onClick={handleShowPassword}>
+                      {showPassword ? <TiEye className="text-xl" /> : <RiEyeCloseLine className="text-xl" />}
+                    </button>
+                  </div>
+                 
                 </div>
-                <p className="text-xs text-gray-500 mt-2">
-                  Password must be at least 8 characters with one uppercase letter and one special character
-                </p>
+
+                <div className="w-full">
+                  <label
+                    className="block text-[#002B45] text-sm font-medium mb-2"
+                    htmlFor="confirmPassword"
+                  >
+                    Confirm Password<span className="text-red-500">*</span>
+                  </label>
+                  <div className="border border-gray-300 rounded-lg flex items-center focus-within:ring-2 focus-within:ring-[#009688] focus-within:border-[#009688] focus-within:shadow-md transition-colors">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      id="confirmPassword"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="w-full px-4 py-2.5 focus:outline-none bg-transparent"
+                      required
+                      placeholder="Confirm Password"
+                    />
+                    <button type="button" className="pr-3 text-gray-500 hover:text-[#004B87]" onClick={handleShowConfirmPassword}>
+                      {showConfirmPassword ? <TiEye className="text-xl" /> : <RiEyeCloseLine className="text-xl" />}
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <div className="mb-6 flex items-start gap-3">
@@ -461,6 +458,24 @@ const SignUp = () => {
                   </button>
                 </label>
               </div>
+
+                <div className="mb-4">
+                  <label
+                    className="block text-[#002B45] text-sm font-medium mb-2"
+                    htmlFor="referralCode"
+                  >
+                    Referral Code (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    id="referralCode"
+                    value={referralCode}
+                    onChange={(e) => setReferralCode(e.target.value)}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#009688] focus:border-[#009688] focus:shadow-md transition-colors"
+                    placeholder="Enter referral code if you have one"
+                  />
+                </div>
+
               
               <button 
                 type="submit" 
@@ -638,8 +653,6 @@ const SignUp = () => {
 };
 
 export default SignUp;
-
-
 
 
 
