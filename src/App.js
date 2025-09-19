@@ -32,7 +32,8 @@ import Welcome from "./Component/Register/Welcome";
 import AdditionalInfo from "./Component/Register/AdditionalInfo";
 import Management from "./Component/Pages/Managements/Management";
 import Referral from "./Component/Pages/Referral/Referral";
-import PhysiotherapistOnboarding from "./Component/PhysiotherapistOnboarding";
+import PhysiotherapistOnboarding from "./Component/Register/PhysiotherapistOnboarding";
+
 
 function App() {
   const dispatch = useDispatch();
@@ -182,7 +183,7 @@ function App() {
         <Route path="/welcome" element={<Welcome />} />
         <Route path="/additional-info" element={<AdditionalInfo />} />
         <Route path="/dashboard" element={<Home />} />
-        <Route path="/test" element={<PhysiotherapistOnboarding />} />
+        <Route path="/complete-profile" element={<PhysiotherapistOnboarding />} />
 
         <Route path="/patients" element={<Patients />} />
         <Route path="/appointments" element={<Appointment />} />

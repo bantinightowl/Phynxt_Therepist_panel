@@ -1,3 +1,5 @@
+import { createSlice } from "@reduxjs/toolkit";
+
 // appointmentsSlice.js
 const initialState = {
   selectedAppointmentId: null

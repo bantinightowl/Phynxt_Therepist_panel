@@ -260,21 +260,104 @@
 // export default Management;
 
 import React, { useState } from "react";
-import { FaUser, FaStethoscope, FaNotesMedical, FaSave } from "react-icons/fa";
+import {
+  FaUser,
+  FaStethoscope,
+  FaNotesMedical,
+  FaSave,
+  FaCalendar,
+  FaChevronDown,
+} from "react-icons/fa";
 import Sidebar from "../../../Sidebar/Sidebar";
 import Header from "../../../Header/Header";
 
 const Documentation = () => {
   const [activeTab, setActiveTab] = useState("Assessment");
-  const [formData, setFormData] = useState({
+  const [isTherapyDropdownOpen, setIsTherapyDropdownOpen] = useState(false);
+
+  // State for Assessment tab
+  const [assessmentData, setAssessmentData] = useState({
     subjective: "",
     objective: "",
-    treatmentGoals: "",
+    impression: "",
   });
 
-  const handleInputChange = (e) => {
+  // State for Treatment Notes tab
+  const [treatmentData, setTreatmentData] = useState({
+    therapies: [],
+    otherTherapy: "",
+    treatmentPlan: "",
+    outcome: "",
+    outcomeNotes: "",
+  });
+
+  // State for Follow-Up Notes tab
+  const [followUpData, setFollowUpData] = useState({
+    followUpDate: "",
+    nextSessionPlan: "",
+    homeExerciseProgram: "",
+  });
+
+  // Mock data - in a real app this would come from props or API
+  const patientInfo = {
+    name: "John Doe",
+    age: "45",
+    gender: "Male",
+    service: "Knee Rehab",
+    appointmentDate: "Apr 25, 2025",
+    therapist: "Dr. Sarah Johnson",
+  };
+
+  const therapyOptions = [
+    "Manual Therapy",
+    "Exercises Rehab",
+    "Electrotherapy",
+    "Taping",
+    "Dry Needling",
+    "Others",
+  ];
+
+  const outcomeOptions = ["Improved", "No Change", "Worsened"];
+
+  const handleAssessmentChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
+    setAssessmentData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleTreatmentChange = (e) => {
+    const { name, value, type } = e.target;
+
+    if (type === "checkbox") {
+      // Handle therapies selection
+      const therapy = value;
+      setTreatmentData((prev) => {
+        if (prev.therapies.includes(therapy)) {
+          return {
+            ...prev,
+            therapies: prev.therapies.filter((t) => t !== therapy),
+            ...(therapy === "Others" ? { otherTherapy: "" } : {}),
+          };
+        } else {
+          return {
+            ...prev,
+            therapies: [...prev.therapies, therapy],
+          };
+        }
+      });
+    } else {
+      setTreatmentData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
+  };
+
+  const handleFollowUpChange = (e) => {
+    const { name, value } = e.target;
+    setFollowUpData((prev) => ({
       ...prev,
       [name]: value,
     }));
@@ -286,21 +369,25 @@ const Documentation = () => {
     // Here you would typically send the data to an API
   };
 
+  const toggleTherapyDropdown = () => {
+    setIsTherapyDropdownOpen(!isTherapyDropdownOpen);
+  };
+
   const tabs = [
     {
       id: "Assessment",
       label: "Assessment",
-      icon: <FaStethoscope className="mr-2" />,
+      icon: <FaStethoscope className="mr-1 md:mr-2 hidden md:block" />,
     },
     {
       id: "TreatmentNotes",
-      label: "Treatment Notes",
-      icon: <FaNotesMedical className="mr-2" />,
+      label: "Treatment",
+      icon: <FaNotesMedical className="mr-1 md:mr-2 hidden md:block" />,
     },
     {
       id: "FollowUpNotes",
-      label: "Follow-up Notes",
-      icon: <FaUser className="mr-2" />,
+      label: "Follow-up",
+      icon: <FaUser className="mr-1 md:mr-2 hidden md:block" />,
     },
   ];
 
@@ -309,18 +396,18 @@ const Documentation = () => {
       <Sidebar activePage="/" />
       <div className="flex-1 flex flex-col overflow-x-hidden">
         <Header />
-        <main className="flex-1 p-4 bg-[#0B1B33] text-white overflow-y-auto overflow-x-hidden">
+        <main className="flex-1 p-2 md:p-4 bg-[#0B1B33] text-white overflow-y-auto overflow-x-hidden">
           <div className="max-w-6xl mx-auto">
-            <h1 className="text-2xl md:text-3xl font-bold mb-6">
+            <h1 className="text-xl md:text-3xl font-bold mb-4 md:mb-6">
               Documentation
             </h1>
 
             {/* Tabs Navigation */}
-            <div className="flex mb-6">
+            <div className="flex overflow-x-auto mb-4 md:mb-6 hide-scrollbar">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
-                  className={`flex items-center px-4 py-3 text-sm md:text-base font-medium transition-all duration-300 ease-in-out ${
+                  className={`flex items-center px-3 py-2 md:px-4 md:py-3 text-xs md:text-base font-medium transition-all duration-300 ease-in-out flex-shrink-0 ${
                     activeTab === tab.id
                       ? "text-teal-400 border-b-2 border-teal-400"
                       : "text-gray-400 hover:text-gray-300 border-b-2 border-transparent"
@@ -328,78 +415,95 @@ const Documentation = () => {
                   onClick={() => setActiveTab(tab.id)}
                 >
                   {tab.icon}
-                  <span className="ml-2">{tab.label}</span>
+                  <span className="ml-1 md:ml-2">{tab.label}</span>
                 </button>
               ))}
             </div>
 
             {/* Tab Content */}
-            <div className=" transition-all duration-300">
+            <div className="transition-all duration-300">
               {/* Assessment Tab */}
               {activeTab === "Assessment" && (
                 <div className="animate-fadeIn">
-                  <div className=" bg-white text-[#002B45] rounded-lg shadow-lg p-4 md:p-6 mb-6">
-                    <p className="font-bold">John Doe</p>
-                    <div className="flex flex-col md:flex-row gap-4 md:gap-8 my-2">
-                      <span>Age: 45, Male</span>
-                      <span>Service: Knee Rehab</span>
+                  <div className="bg-white text-[#002B45] rounded-lg shadow-lg p-3 md:p-6 mb-4 md:mb-6">
+                    <p className="font-bold text-base md:text-lg">{patientInfo.name}</p>
+                    <div className="flex flex-col md:flex-row gap-2 md:gap-8 my-1 md:my-2">
+                      <p className="text-sm md:text-base">
+                        Age/Gender:{" "}
+                        <span className="font-semibold">
+                          {" "}
+                          {patientInfo.age}, {patientInfo.gender}
+                        </span>
+                      </p>
+                      <p className="text-sm md:text-base">
+                        Service:{" "}
+                        <span className="font-semibold">
+                          {" "}
+                          {patientInfo.service}
+                        </span>
+                      </p>
                     </div>
-                    <p className="">Appointment Date: Apr 25,2025</p>
+                    <p className="text-sm md:text-base">
+                      Appointment Date:{" "}
+                      <span className="font-semibold">
+                        {" "}
+                        {patientInfo.appointmentDate}
+                      </span>
+                    </p>
                   </div>
 
                   <form
-                    className="bg-white text-[#002B45] rounded-lg shadow-lg p-4 md:p-6"
+                    className="bg-white text-[#002B45] rounded-lg shadow-lg p-3 md:p-6"
                     onSubmit={handleSubmit}
                   >
-                    {/* <h3 className="text-lg font-bold mb-4">Assessment Form</h3> */}
-                    <div className="space-y-4">
+                    <div className="space-y-4 md:space-y-6">
                       <div>
-                        <label className="block font-medium mb-1">
-                          Subjective
+                        <label className="block font-medium mb-1 text-sm md:text-base">
+                          Subjective History
                         </label>
                         <textarea
                           name="subjective"
-                          value={formData.subjective}
-                          onChange={handleInputChange}
-                          className="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                          value={assessmentData.subjective}
+                          onChange={handleAssessmentChange}
+                          className="w-full p-2 md:p-3 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm md:text-base"
                           rows="1"
-                          placeholder="Patient's reported symptoms and feelings"
+                          placeholder="Patient complaints, history, pain, functional limitations..."
                         />
                       </div>
 
                       <div>
-                        <label className="block font-medium mb-1">
-                          Objective
+                        <label className="block font-medium mb-1 text-sm md:text-base">
+                          Objective Findings
                         </label>
                         <textarea
                           name="objective"
-                          value={formData.objective}
-                          onChange={handleInputChange}
-                          className="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                          value={assessmentData.objective}
+                          onChange={handleAssessmentChange}
+                          className="w-full p-2 md:p-3 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm md:text-base"
                           rows="1"
-                          placeholder="Observations and measurements"
+                          placeholder="ROM, strength, posture, special tests, observations..."
                         />
                       </div>
 
                       <div>
-                        <label className="block font-medium mb-1">
-                          Treatment Goals
+                        <label className="block font-medium mb-1 text-sm md:text-base">
+                          Assessment / Impression
                         </label>
                         <textarea
-                          name="treatmentGoals"
-                          value={formData.treatmentGoals}
-                          onChange={handleInputChange}
-                          className="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                          name="impression"
+                          value={assessmentData.impression}
+                          onChange={handleAssessmentChange}
+                          className="w-full p-2 md:p-3 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm md:text-base"
                           rows="1"
-                          placeholder="Goals for patient treatment"
+                          placeholder="Physio's clinical judgment / provisional diagnosis..."
                         />
                       </div>
 
                       <button
                         type="submit"
-                        className="flex items-center bg-teal-500 text-white px-4 py-2 rounded hover:bg-teal-600 transition-colors"
+                        className="flex items-center justify-center bg-teal-500 text-white px-3 py-2 md:px-4 md:py-2 rounded hover:bg-teal-600 transition-colors text-sm md:text-base"
                       >
-                        <FaSave className="mr-2" /> Save
+                        <FaSave className="mr-1 md:mr-2" /> Save Assessment
                       </button>
                     </div>
                   </form>
@@ -408,76 +512,278 @@ const Documentation = () => {
 
               {/* Treatment Notes Tab */}
               {activeTab === "TreatmentNotes" && (
-                <div className="text-[#002B45] animate-fadeIn">
-                  <div className="space-y-4">
-                    <div className="p-4 bg-gray-100 rounded">
-                      <p className="font-semibold">June 15, 2023</p>
-                      <p>
-                        Patient responded well to physical therapy session.
-                        Increased range of motion noted in shoulder joint.
+                <div className="animate-fadeIn">
+                  <div className="bg-white text-[#002B45] rounded-lg shadow-lg p-3 md:p-6 mb-4 md:mb-6">
+                    <p className="font-bold text-base md:text-lg">{patientInfo.name}</p>
+                    <div className="flex flex-col md:flex-row gap-2 md:gap-8 my-1 md:my-2">
+                      <p className="text-sm md:text-base">
+                        Service:{" "}
+                        <span className="font-semibold">
+                          {" "}
+                          {patientInfo.service}
+                        </span>
+                      </p>
+                      <p className="text-sm md:text-base">
+                        Therapist:{" "}
+                        <span className="font-semibold">
+                          {" "}
+                          {patientInfo.therapist}
+                        </span>
                       </p>
                     </div>
-                    <div className="p-4 bg-gray-100 rounded">
-                      <p className="font-semibold">June 8, 2023</p>
-                      <p>
-                        Initial treatment session focused on pain management and
-                        gentle mobilization exercises.
-                      </p>
-                    </div>
-                    <div className="p-4 bg-gray-100 rounded">
-                      <p className="font-semibold">June 1, 2023</p>
-                      <p>
-                        Patient presented with moderate shoulder pain. Initial
-                        assessment completed.
-                      </p>
-                    </div>
+                    <p className="text-sm md:text-base">
+                      Session Date:{" "}
+                      <span className="font-semibold">
+                        {" "}
+                        {new Date().toLocaleDateString()}
+                      </span>
+                    </p>
                   </div>
+
+                  <form
+                    className="bg-white text-[#002B45] rounded-lg shadow-lg p-3 md:p-6"
+                    onSubmit={handleSubmit}
+                  >
+                    <div className="space-y-4 md:space-y-6">
+                      <div className="relative">
+                        <label className="block font-medium mb-1 text-sm md:text-base">
+                          Therapies Used
+                        </label>
+                        <div
+                          className="w-full p-2 md:p-3 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer text-sm md:text-base"
+                          onClick={toggleTherapyDropdown}
+                        >
+                          <div className="flex justify-between items-center">
+                            <span className="flex flex-wrap gap-1 md:gap-2">
+                              {treatmentData.therapies.length === 0
+                                ? "Select therapies..."
+                                : treatmentData.therapies.map(
+                                    (therapy, index) => (
+                                      <span
+                                        key={index}
+                                        className="px-1 py-0.5 md:px-2 md:py-1 text-xs md:text-sm bg-[#002B45] text-white rounded"
+                                      >
+                                        {therapy}
+                                      </span>
+                                    )
+                                  )}
+                            </span>
+                            <FaChevronDown
+                              className={`transform text-sm md:text-base ${
+                                isTherapyDropdownOpen ? "rotate-180" : ""
+                              } transition-transform`}
+                            />
+                          </div>
+                        </div>
+
+                        {isTherapyDropdownOpen && (
+                          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded shadow-lg max-h-60 overflow-auto">
+                            {therapyOptions.map((therapy) => (
+                              <div
+                                key={therapy}
+                                className="px-3 py-1 md:px-4 md:py-2 cursor-pointer hover:bg-gray-100 text-sm md:text-base"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleTreatmentChange({
+                                    target: {
+                                      type: "checkbox",
+                                      value: therapy,
+                                      checked:
+                                        !treatmentData.therapies.includes(
+                                          therapy
+                                        ),
+                                    },
+                                  });
+                                }}
+                              >
+                                <div className="flex items-center">
+                                  <input
+                                    type="checkbox"
+                                    checked={treatmentData.therapies.includes(
+                                      therapy
+                                    )}
+                                    onChange={() => {}}
+                                    className="w-3 h-3 md:w-4 md:h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                                  />
+                                  <label className="ml-2 text-sm font-medium">
+                                    {therapy}
+                                  </label>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {treatmentData.therapies.includes("Others") && (
+                          <div className="mt-2 md:mt-4">
+                            <label className="block text-xs md:text-sm font-medium mb-1">
+                              Please specify other therapy:
+                            </label>
+                            <input
+                              type="text"
+                              name="otherTherapy"
+                              value={treatmentData.otherTherapy}
+                              onChange={handleTreatmentChange}
+                              className="w-full p-1 md:p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm md:text-base"
+                              placeholder="Enter other therapy..."
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block font-medium mb-1 text-sm md:text-base">
+                          Treatment / Rehab Plan
+                        </label>
+                        <textarea
+                          name="treatmentPlan"
+                          value={treatmentData.treatmentPlan}
+                          onChange={handleTreatmentChange}
+                          className="w-full p-2 md:p-3 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm md:text-base"
+                          rows="1"
+                          placeholder="Enter treatment/rehab plan for this session..."
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-medium mb-1 text-sm md:text-base">
+                          Post-Treatment Outcome
+                        </label>
+                        <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
+                          <select
+                            name="outcome"
+                            value={treatmentData.outcome}
+                            onChange={handleTreatmentChange}
+                            className="p-1 md:p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm md:text-base"
+                          >
+                            <option value="">Select outcome</option>
+                            {outcomeOptions.map((option) => (
+                              <option key={option} value={option}>
+                                {option}
+                              </option>
+                            ))}
+                          </select>
+
+                          <input
+                            type="text"
+                            name="outcomeNotes"
+                            value={treatmentData.outcomeNotes}
+                            onChange={handleTreatmentChange}
+                            className="flex-1 p-1 md:p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm md:text-base"
+                            placeholder="Optional notes..."
+                          />
+                        </div>
+                      </div>
+
+                      <button
+                        type="submit"
+                        className="flex items-center justify-center bg-teal-500 text-white px-3 py-2 md:px-4 md:py-2 rounded hover:bg-teal-600 transition-colors text-sm md:text-base"
+                      >
+                        <FaSave className="mr-1 md:mr-2" /> Save Treatment Notes
+                      </button>
+                    </div>
+                  </form>
                 </div>
               )}
 
-              {/* Follow-up Notes Tab */}
+              {/* Follow-Up Notes Tab */}
               {activeTab === "FollowUpNotes" && (
-                <div className="text-[#002B45] animate-fadeIn">
-                  <div className="space-y-4">
-                    <div className="p-4 bg-gray-100 rounded">
-                      <p className="font-semibold">Scheduled Follow-up:</p>
-                      <p>Next appointment: June 22, 2023 at 10:00 AM</p>
-                    </div>
-                    <div className="p-4 bg-gray-100 rounded">
-                      <p className="font-semibold">Recommendations:</p>
-                      <p>
-                        Continue home exercises twice daily. Apply ice if any
-                        discomfort occurs.
-                      </p>
-                    </div>
-                    <div className="p-4 bg-gray-100 rounded">
-                      <p className="font-semibold">Long-term Plan:</p>
-                      <p>
-                        Schedule follow-up in 2 weeks to assess progress.
-                        Consider additional imaging if no improvement.
-                      </p>
-                    </div>
+                <div className="animate-fadeIn">
+                  <div className="bg-white text-[#002B45] rounded-lg shadow-lg p-3 md:p-6 mb-4 md:mb-6">
+                    <p className="font-bold text-base md:text-lg">{patientInfo.name}</p>
+                    <p className="text-sm md:text-base">
+                      Service:{" "}
+                      <span className="font-semibold">
+                        {" "}
+                        {patientInfo.service}
+                      </span>
+                    </p>
                   </div>
+
+                  <form
+                    className="bg-white text-[#002B45] rounded-lg shadow-lg p-3 md:p-6"
+                    onSubmit={handleSubmit}
+                  >
+                    <div className="space-y-4 md:space-y-6">
+                      <div>
+                        <label className="block font-medium mb-1 text-sm md:text-base">
+                          Follow-up Date
+                        </label>
+                        <div className="relative">
+                          <FaCalendar className="absolute left-2 top-2 md:left-3 md:top-3 text-gray-400 text-sm md:text-base" />
+                          <input
+                            type="date"
+                            name="followUpDate"
+                            value={followUpData.followUpDate}
+                            onChange={handleFollowUpChange}
+                            className="w-full pl-7 md:pl-10 p-1 md:p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm md:text-base"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block font-medium mb-1 text-sm md:text-base">
+                          Next Session Plan
+                        </label>
+                        <textarea
+                          name="nextSessionPlan"
+                          value={followUpData.nextSessionPlan}
+                          onChange={handleFollowUpChange}
+                          className="w-full p-2 md:p-3 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm md:text-base"
+                          rows="1"
+                          placeholder="Enter focus area for next session..."
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block font-medium mb-1 text-sm md:text-base">
+                          Home Exercise Program
+                        </label>
+                        <textarea
+                          name="homeExerciseProgram"
+                          value={followUpData.homeExerciseProgram}
+                          onChange={handleFollowUpChange}
+                          className="w-full p-2 md:p-3 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:outline-none text-sm md:text-base"
+                          rows="1"
+                          placeholder="Enter home exercise program or paste exercises..."
+                        />
+                      </div>
+
+                      <button
+                        type="submit"
+                        className="flex items-center justify-center bg-teal-500 text-white px-3 py-2 md:px-4 md:py-2 rounded hover:bg-teal-600 transition-colors text-sm md:text-base"
+                      >
+                        <FaSave className="mr-1 md:mr-2" /> Save Follow-up Notes
+                      </button>
+                    </div>
+                  </form>
                 </div>
               )}
             </div>
-          </div>
 
-          <style jsx>{`
-            @keyframes fadeIn {
-              from {
-                opacity: 0;
-                transform: translateY(10px);
+            <style jsx>{`
+              @keyframes fadeIn {
+                from {
+                  opacity: 0;
+                  transform: translateY(10px);
+                }
+                to {
+                  opacity: 1;
+                  transform: translateY(0);
+                }
               }
-              to {
-                opacity: 1;
-                transform: translateY(0);
+              .animate-fadeIn {
+                animation: fadeIn 0.3s ease-out;
               }
-            }
-            .animate-fadeIn {
-              animation: fadeIn 0.3s ease-out;
-            }
-          `}</style>
+              .hide-scrollbar {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+              }
+              .hide-scrollbar::-webkit-scrollbar {
+                display: none;
+              }
+            `}</style>
+          </div>
         </main>
       </div>
     </div>

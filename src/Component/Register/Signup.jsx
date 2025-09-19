@@ -7,6 +7,8 @@ import { RiEyeCloseLine } from "react-icons/ri";
 import { IoArrowBack } from "react-icons/io5";
 import { FaCheckCircle } from "react-icons/fa";
 import logo from "../../assets/physio_logo.jfif";
+import { useDispatch } from "react-redux";
+import { setRegisterInfo } from "../../redux/UserSlice";
 
 const SignUp = () => {
   const [fullName, setFullName] = useState("");
@@ -38,6 +40,7 @@ const SignUp = () => {
   const [mobileVerified, setMobileVerified] = useState(false);
 
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleShowPassword = () => {
     setShowPassword((pre) => !pre);
@@ -212,25 +215,28 @@ const SignUp = () => {
 
     try {
       setLoading(true);
-      const response = await fetch(
-        "https://physiotherapy-1.onrender.com/apis/physiotherapistAuth/registerPhysiotherapist",
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      // const response = await fetch(
+      //   "https://physiotherapy-1.onrender.com/apis/physiotherapistAuth/registerPhysiotherapist",
+      //   {
+      //     method: "POST",
+      //     body: formData,
+      //   }
+      // );
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Signup failed:", errorData);
-        setError(errorData.message || "Signup failed");
-        return;
-      }
+      // if (!response.ok) {
+      //   const errorData = await response.json();
+      //   console.error("Signup failed:", errorData);
+      //   setError(errorData.message || "Signup failed");
+      //   return;
+      // }
 
-      const data = await response.json();
-      console.log("Signup success:", data);
+      // const data = await response.json();
+      // console.log("Signup success:", data);
+      dispatch(setRegisterInfo({fullName, email,phone, referralCode}));
       // setShowVerificationModal(true);
-      navigate("/welcome");
+      // navigate("/welcome");
+      
+      navigate("/complete-profile");
     } catch (err) {
       console.error("Error submitting signup:", err);
       setError("Something went wrong. Please try again.");
